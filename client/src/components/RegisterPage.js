@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './LoginPage.css'; /* Reusing the shared styling */
 
 const RegisterPage = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -27,6 +28,7 @@ const RegisterPage = () => {
     console.log('Registration Attempt:', formData);
     alert('Registration functionality is not yet implemented. Data logged to console.');
     // In a real application, you would send this data to your backend for user registration
+    navigate('/');
   };
 
   return (
@@ -42,6 +44,7 @@ const RegisterPage = () => {
               name="username"
               value={formData.username}
               onChange={handleChange}
+              autoComplete="off"
               required
             />
           </div>
@@ -53,6 +56,7 @@ const RegisterPage = () => {
               name="email"
               value={formData.email}
               onChange={handleChange}
+              autoComplete="off"
               required
             />
           </div>
@@ -64,6 +68,7 @@ const RegisterPage = () => {
               name="password"
               value={formData.password}
               onChange={handleChange}
+              autoComplete="new-password"
               required
             />
           </div>
@@ -75,12 +80,14 @@ const RegisterPage = () => {
               name="confirmPassword"
               value={formData.confirmPassword}
               onChange={handleChange}
+              autoComplete="new-password"
               required
             />
           </div>
           <button type="submit" className="auth-button">Register</button>
         </form>
         <p className="auth-switch-text">Already have an account? <Link to="/login">Login here</Link></p>
+        <p className="auth-back-home"><Link to="/">Back to Home</Link></p>
       </div>
     </div>
   );

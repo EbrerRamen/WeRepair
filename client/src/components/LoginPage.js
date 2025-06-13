@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './LoginPage.css';
 
 const LoginPage = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -21,6 +22,7 @@ const LoginPage = () => {
     console.log('Login Attempt:', formData);
     alert('Login functionality is not yet implemented. Data logged to console.');
     // In a real application, you would send this data to your backend for authentication
+    navigate('/');
   };
 
   return (
@@ -36,6 +38,7 @@ const LoginPage = () => {
               name="email"
               value={formData.email}
               onChange={handleChange}
+              autoComplete="off"
               required
             />
           </div>
@@ -47,12 +50,14 @@ const LoginPage = () => {
               name="password"
               value={formData.password}
               onChange={handleChange}
+              autoComplete="off"
               required
             />
           </div>
           <button type="submit" className="auth-button">Login</button>
         </form>
         <p className="auth-switch-text">Don't have an account? <Link to="/register">Register here</Link></p>
+        <p className="auth-back-home"><Link to="/">Back to Home</Link></p>
       </div>
     </div>
   );
