@@ -1,0 +1,71 @@
+✅ Core Features (MVP – Must Have)
+These are essential and can all be built & hosted for free.
+
+1. User Authentication
+Register/Login (Email & password)
+
+Role-based access: User and Admin
+
+Password reset
+
+2. Service Request System
+Form for users to request repairs for:
+
+Mouse
+
+Keyboard
+
+Headphones
+
+Controllers
+
+Select issue type (e.g. “not clicking”, “left channel dead”, “joystick drift”)
+
+Option to upload an image
+
+Status tracker: Pending, In Repair, Repaired, Delivered
+
+3. Dashboard
+User Dashboard
+
+View all service requests
+
+Track status
+
+Edit/cancel request (if pending)
+
+Admin Dashboard
+
+View all requests
+
+Change status
+
+Assign repair staff (optional future feature)
+
+4. Contact / Support Page
+Contact form (name, email, message)
+
+Basic FAQ section
+
+5. Home Page
+Brief about services
+
+Testimonials (static or fetched)
+
+Call-to-action: “Request Repair Now”
+
+6. Reviews/Testimonial Page
+Users can leave reviews after a repair is completed
+
+Star rating + comment
+
+🛠️ Optional (Advanced/Future Features)
+Chatbot/Live Chat (with a simple chatbot or live support via 3rd party)
+
+Admin Analytics (total repairs, device type stats)
+
+Coupon codes / referral system
+
+Pickup/Delivery address form
+
+Email Notifications (on status change)
