@@ -112,10 +112,10 @@ const HomePage = () => {
           <p>Get started with our simple repair request process</p>
           <motion.button
             className="cta-button"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.6 }}
-            whileHover={{ scale: 1.05 }}
+            whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.95 }}
           >
             <a href="/login" style={{ color: 'inherit', textDecoration: 'none' }}>Request Repair Now</a>
