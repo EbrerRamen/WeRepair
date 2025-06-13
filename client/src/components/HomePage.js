@@ -1,5 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faDiscord, faFacebookF } from '@fortawesome/free-brands-svg-icons';
 import './HomePage.css';
 
 const HomePage = () => {
@@ -72,16 +74,33 @@ const HomePage = () => {
 
   return (
     <div className="home-page">
+      <nav className="main-nav">
+        <div className="nav-logo">
+          <h1 className="brand-logo">
+            <span className="logo-we">We</span>
+            <span className="logo-repair">Repair</span>
+          </h1>
+        </div>
+        <div className="nav-links">
+          <a href="/login" className="nav-link">Login</a>
+          <a href="/register" className="nav-link">Register</a>
+        </div>
+      </nav>
+
       {/* Hero Section */}
       <section className="hero">
         <div className="hero-content">
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
+          <motion.div
+            className="logo-container"
+            initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            Expert Gaming Gear Repair
-          </motion.h1>
+            <h1 className="brand-logo">
+              <span className="logo-we">We</span>
+              <span className="logo-repair">Repair</span>
+            </h1>
+          </motion.div>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -89,21 +108,23 @@ const HomePage = () => {
           >
             Professional repair services for your gaming peripherals. Fast, reliable, and affordable.
           </motion.p>
+          <h2>Ready to Fix Your Gaming Gear?</h2>
+          <p>Get started with our simple repair request process</p>
           <motion.button
             className="cta-button"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            Request Repair Now
+            <a href="/login" style={{ color: 'inherit', textDecoration: 'none' }}>Request Repair Now</a>
           </motion.button>
         </div>
       </section>
 
       {/* Services Section */}
-      <section className="services">
+      <section className="services" id="services-section">
         <h2>Our Services</h2>
         <div className="services-grid">
           {services.map((service, index) => (
@@ -169,24 +190,19 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="cta-section">
-        <motion.div
-          className="cta-content"
-          initial={{ opacity: 0, scale: 0.9 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          <h2>Ready to Fix Your Gaming Gear?</h2>
-          <p>Get started with our simple repair request process</p>
-          <motion.button
-            className="cta-button"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            Request Repair Now
-          </motion.button>
-        </motion.div>
+      {/* Social Media Section */}
+      <section className="social-media-section">
+        <div className="social-media-content">
+          <h2>Connect With Us</h2>
+          <div className="social-links">
+            <a href="https://discord.gg/y5WUgFTYXP" target="_blank" rel="noopener noreferrer" className="social-link discord">
+              Discord
+            </a>
+            <a href="https://www.facebook.com/wespacerepair" target="_blank" rel="noopener noreferrer" className="social-link facebook">
+              Facebook
+            </a>
+          </div>
+        </div>
       </section>
     </div>
   );
