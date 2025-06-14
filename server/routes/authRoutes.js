@@ -40,14 +40,17 @@ router.post('/register',
       // Check for validation errors
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
+        console.log('Validation errors:', errors.array());
         return res.status(400).json({ errors: errors.array() });
       }
 
       const { email, password, name, phone } = req.body;
+      console.log('Registration attempt for:', { email, name });
 
       // Check if user already exists
       let user = await User.findOne({ email });
       if (user) {
+        console.log('User already exists:', email);
         return res.status(400).json({ message: 'User already exists' });
       }
 
@@ -59,32 +62,52 @@ router.post('/register',
         phone
       });
 
-      await user.save();
+      try {
+        await user.save();
+        console.log('User saved successfully:', email);
 
-      // Create token
-      const token = jwt.sign(
-        { id: user._id, role: user.role },
-        process.env.JWT_SECRET,
-        { expiresIn: '1d' }
-      );
+        // Create token
+        const token = jwt.sign(
+          { id: user._id, role: user.role },
+          process.env.JWT_SECRET,
+          { expiresIn: '1d' }
+        );
 
-      res.status(201).json({
-        token,
-        user: {
+        const userResponse = {
           id: user._id,
           name: user.name,
           email: user.email,
           role: user.role
-        }
-      });
+        };
+
+        console.log('Sending successful registration response');
+        res.status(201).json({
+          token,
+          user: userResponse
+        });
+      } catch (saveError) {
+        console.error('Error saving user:', saveError);
+        throw saveError;
+      }
     } catch (err) {
-      console.error('Registration error:', err);
+      console.error('Registration error details:', {
+        message: err.message,
+        stack: err.stack,
+        name: err.name,
+        code: err.code
+      });
+      
       if (err.code === 11000) {
         return res.status(400).json({ message: 'Email already exists' });
       }
+      
       res.status(500).json({ 
         message: 'Registration failed',
-        error: process.env.NODE_ENV === 'development' ? err.message : undefined
+        error: process.env.NODE_ENV === 'development' ? err.message : undefined,
+        details: process.env.NODE_ENV === 'development' ? {
+          name: err.name,
+          code: err.code
+        } : undefined
       });
     }
   }
@@ -101,41 +124,56 @@ router.post('/login',
       // Check for validation errors
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
+        console.log('Validation errors:', errors.array());
         return res.status(400).json({ errors: errors.array() });
       }
 
       const { email, password } = req.body;
+      console.log('Login attempt for email:', email);
 
       // Check if user exists
       const user = await User.findOne({ email });
       if (!user) {
+        console.log('User not found:', email);
         return res.status(400).json({ message: 'Invalid email or password' });
       }
+      console.log('User found:', user.email);
 
       // Check password
-      const isMatch = await user.comparePassword(password);
-      if (!isMatch) {
-        return res.status(400).json({ message: 'Invalid email or password' });
-      }
-
-      // Create token
-      const token = jwt.sign(
-        { id: user._id, role: user.role },
-        process.env.JWT_SECRET,
-        { expiresIn: '1d' }
-      );
-
-      res.json({
-        token,
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role
+      try {
+        const isMatch = await user.comparePassword(password);
+        console.log('Password match:', isMatch);
+        
+        if (!isMatch) {
+          return res.status(400).json({ message: 'Invalid email or password' });
         }
-      });
+
+        // Create token
+        const token = jwt.sign(
+          { id: user._id, role: user.role },
+          process.env.JWT_SECRET,
+          { expiresIn: '1d' }
+        );
+
+        res.json({
+          token,
+          user: {
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role
+          }
+        });
+      } catch (passwordError) {
+        console.error('Password comparison error:', passwordError);
+        throw passwordError;
+      }
     } catch (err) {
-      console.error('Login error:', err);
+      console.error('Login error details:', {
+        message: err.message,
+        stack: err.stack,
+        name: err.name
+      });
       res.status(500).json({ 
         message: 'Login failed',
         error: process.env.NODE_ENV === 'development' ? err.message : undefined

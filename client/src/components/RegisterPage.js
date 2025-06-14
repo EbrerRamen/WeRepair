@@ -39,12 +39,14 @@ const RegisterPage = () => {
     }
 
     try {
+      console.log('Attempting registration for:', formData.email);
       const result = await register({
         name: formData.name,
         email: formData.email,
         password: formData.password,
         phone: formData.phone
       });
+      console.log('Registration result:', result);
 
       if (result.success) {
         navigate('/dashboard');

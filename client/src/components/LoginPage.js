@@ -25,7 +25,10 @@ const LoginPage = () => {
     setError('');
 
     try {
+      console.log('Attempting login with:', formData.email);
       const result = await login(formData.email, formData.password);
+      console.log('Login result:', result);
+      
       if (result.success) {
         navigate('/dashboard');
       } else {
