@@ -1,26 +1,14 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
 import HomePage from './components/HomePage';
 import GetQuotePage from './components/GetQuotePage';
 import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
+import Dashboard from './components/Dashboard';
+import AdminDashboard from './components/AdminDashboard';
 import './App.css';
-
-// Protected Route component
-const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
-  
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-  
-  if (!isAuthenticated) {
-    return <Navigate to="/login" />;
-  }
-  
-  return children;
-};
 
 function App() {
   return (
@@ -32,12 +20,19 @@ function App() {
             <Route path="/contact" element={<GetQuotePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
-            {/* Add protected routes here */}
             <Route 
               path="/dashboard" 
               element={
                 <ProtectedRoute>
-                  <div>Dashboard (Coming Soon)</div>
+                  <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminDashboard />
                 </ProtectedRoute>
               } 
             />
