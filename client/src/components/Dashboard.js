@@ -288,7 +288,7 @@ const Dashboard = () => {
                   <p><strong>Phone:</strong> {user?.phone || 'Not provided'}</p>
                 </div>
                 <div className="action-buttons">
-                  <button className="btn-secondary">Edit Profile</button>
+                  <Link to="/edit-profile" className="btn-secondary">Edit Profile</Link>
                 </div>
               </div>
             </motion.div>

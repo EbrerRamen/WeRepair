@@ -3,29 +3,48 @@ const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
 const User = require('../models/User');
 
-// Get current user profile
+// Get user profile
 router.get('/profile', protect, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('-password');
+    const user = await User.findById(req.user._id).select('-password');
     res.json(user);
-  } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching profile', error: error.message });
   }
 });
 
 // Update user profile
 router.put('/profile', protect, async (req, res) => {
   try {
-    const { name, phone } = req.body;
-    const user = await User.findById(req.user.id);
+    const { name, email, phone } = req.body;
 
+    // Check if email is already taken by another user
+    if (email) {
+      const existingUser = await User.findOne({ email, _id: { $ne: req.user._id } });
+      if (existingUser) {
+        return res.status(400).json({ message: 'Email is already in use' });
+      }
+    }
+
+    const user = await User.findById(req.user._id);
+    
     if (name) user.name = name;
+    if (email) user.email = email;
     if (phone) user.phone = phone;
 
     await user.save();
-    res.json({ message: 'Profile updated successfully' });
-  } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+
+    res.json({
+      message: 'Profile updated successfully',
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating profile', error: error.message });
   }
 });
 

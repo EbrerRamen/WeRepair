@@ -199,13 +199,23 @@ const GetQuotePage = () => {
             </div>
           )}
 
-          <button 
-            type="submit" 
-            className="submit-button"
-            disabled={loading}
-          >
-            {loading ? 'Submitting...' : 'Submit Request'}
-          </button>
+          <div className="form-actions">
+            <button 
+              type="submit" 
+              className="btn-primary"
+              disabled={loading}
+            >
+              {loading ? 'Submitting...' : 'Submit Request'}
+            </button>
+            <button 
+              type="button" 
+              className="btn-secondary"
+              onClick={() => navigate('/dashboard')}
+              disabled={loading}
+            >
+              Cancel
+            </button>
+          </div>
         </form>
       </div>
     </div>

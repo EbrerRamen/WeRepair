@@ -161,9 +161,14 @@
   transform: translateY(-2px);
 }
 
-.submit-button {
-  background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
-  color: white;
+.quote-form-container .form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.quote-form-container .form-actions button {
+  flex: 1;
   padding: 1rem 2.5rem;
   border: none;
   border-radius: 8px;
@@ -171,17 +176,44 @@
   font-weight: 700;
   cursor: pointer;
   transition: all 0.3s ease;
-  margin-top: 2rem;
 }
 
-.submit-button:hover {
+.quote-form-container .btn-primary {
+  background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+  color: white;
+}
+
+.quote-form-container .btn-primary:hover:not(:disabled) {
   transform: translateY(-3px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
 }
 
-.submit-button:active {
+.quote-form-container .btn-primary:active {
   transform: translateY(0);
   box-shadow: none;
+}
+
+.quote-form-container .btn-secondary {
+  background: #2A2A2A;
+  color: white;
+  border: 2px solid var(--primary-color);
+}
+
+.quote-form-container .btn-secondary:hover:not(:disabled) {
+  background: var(--primary-color);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.quote-form-container .btn-secondary:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.quote-form-container button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .error-message {
@@ -192,12 +224,6 @@
   border-radius: 5px;
   margin-bottom: 1.5rem;
   text-align: center;
-}
-
-.submit-button:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-  transform: none;
 }
 
 /* Responsive adjustments */

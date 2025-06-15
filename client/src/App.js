@@ -8,6 +8,7 @@ import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
 import Dashboard from './components/Dashboard';
 import AdminDashboard from './components/AdminDashboard';
+import EditProfile from './components/EditProfile';
 import './App.css';
 
 function App() {
@@ -36,6 +37,7 @@ function App() {
                 </ProtectedRoute>
               } 
             />
+            <Route path="/edit-profile" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
           </Routes>
     </div>
       </Router>
