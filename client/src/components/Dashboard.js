@@ -20,7 +20,7 @@ const Dashboard = () => {
       if (activeTab === 'users') {
         fetchUsers();
       } else if (activeTab === 'requests') {
-        fetchAllRepairRequests();
+        fetchRepairRequests();
       }
     } else if (activeTab === 'repairs') {
       fetchRepairRequests();
@@ -52,30 +52,11 @@ const Dashboard = () => {
 
   const fetchRepairRequests = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/quotes/my-quotes', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch repair requests');
-      }
+      const endpoint = user?.role === 'admin' 
+        ? 'http://localhost:5000/api/quotes/all'
+        : 'http://localhost:5000/api/quotes/my-quotes';
 
-      const data = await response.json();
-      setRepairRequests(data.quotes);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchAllRepairRequests = async () => {
-    try {
-      const response = await fetch('http://localhost:5000/api/quotes/all', {
+      const response = await fetch(endpoint, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json'
@@ -187,41 +168,6 @@ const Dashboard = () => {
     navigate(`/edit-request/${requestId}`);
   };
 
-  const handleRejectRequest = async (requestId) => {
-    if (!window.confirm('Are you sure you want to reject this repair request?')) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`http://localhost:5000/api/quotes/${requestId}/reject`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Failed to reject request');
-      }
-
-      // Update the request status in the state
-      setRepairRequests(prevRequests => 
-        prevRequests.map(request => 
-          request._id === requestId 
-            ? { ...request, status: 'rejected' }
-            : request
-        )
-      );
-
-      alert('Repair request rejected successfully');
-    } catch (error) {
-      console.error('Error rejecting request:', error);
-      alert(error.message || 'Failed to reject request');
-    }
-  };
-
   const renderAdminDashboard = () => (
     <div className="dashboard-content">
       {activeTab === 'overview' && (
@@ -252,6 +198,55 @@ const Dashboard = () => {
         </motion.div>
       )}
 
+      {activeTab === 'users' && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="users-section"
+        >
+          <div className="dashboard-card">
+            <h2>User Management</h2>
+            {loading ? (
+              <div className="loading">Loading users...</div>
+            ) : error ? (
+              <div className="error-message">{error}</div>
+            ) : (
+              <div className="users-list">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Role</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {users.map(user => (
+                      <tr key={user._id}>
+                        <td>{user.name}</td>
+                        <td>{user.email}</td>
+                        <td>{user.role}</td>
+                        <td>
+                          <select 
+                            value={user.role}
+                            onChange={(e) => updateUserRole(user._id, e.target.value)}
+                          >
+                            <option value="user">User</option>
+                            <option value="admin">Admin</option>
+                          </select>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </motion.div>
+      )}
+
       {activeTab === 'requests' && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -260,7 +255,7 @@ const Dashboard = () => {
           className="repairs-section"
         >
           <div className="dashboard-card">
-            <h2>Repair Requests</h2>
+            <h2>All Repair Requests</h2>
             {loading ? (
               <div className="loading">Loading repair requests...</div>
             ) : error ? (
@@ -320,68 +315,24 @@ const Dashboard = () => {
                       <span className="date">
                         Submitted: {new Date(request.createdAt).toLocaleDateString()}
                       </span>
-                      {request.status === 'pending' && (
-                        <div className="request-actions">
-                          <button 
-                            className="btn-secondary reject-button"
-                            onClick={() => handleRejectRequest(request._id)}
-                          >
-                            Reject Request
-                          </button>
-                        </div>
-                      )}
+                      <div className="request-actions">
+                        <button 
+                          className="btn-secondary edit-button"
+                          onClick={() => handleEditRequest(request._id)}
+                        >
+                          Edit Request
+                        </button>
+                        <button 
+                          className="btn-secondary cancel-button"
+                          onClick={() => handleCancelRequest(request._id)}
+                          disabled={cancellingId === request._id}
+                        >
+                          {cancellingId === request._id ? 'Cancelling...' : 'Cancel Request'}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
-              </div>
-            )}
-          </div>
-        </motion.div>
-      )}
-
-      {activeTab === 'users' && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-          className="users-section"
-        >
-          <div className="dashboard-card">
-            <h2>User Management</h2>
-            {loading ? (
-              <div className="loading">Loading users...</div>
-            ) : error ? (
-              <div className="error-message">{error}</div>
-            ) : (
-              <div className="users-list">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Email</th>
-                      <th>Role</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {users.map(user => (
-                      <tr key={user._id}>
-                        <td>{user.name}</td>
-                        <td>{user.email}</td>
-                        <td>{user.role}</td>
-                        <td>
-                          <select 
-                            value={user.role}
-                            onChange={(e) => updateUserRole(user._id, e.target.value)}
-                          >
-                            <option value="user">User</option>
-                            <option value="admin">Admin</option>
-                          </select>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
               </div>
             )}
           </div>
@@ -655,4 +606,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard; 
+export default Dashboard;
