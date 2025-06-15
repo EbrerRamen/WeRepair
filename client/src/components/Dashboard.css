@@ -385,4 +385,21 @@
 .users-list select:focus {
   outline: none;
   border-color: #007bff;
+}
+
+.device-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.device-info h3 {
+  margin: 0;
+  color: var(--text-color);
+  font-size: 1.2rem;
+}
+
+.device-type {
+  color: #666;
+  font-size: 0.9rem;
 } 

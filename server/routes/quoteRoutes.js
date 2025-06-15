@@ -53,12 +53,12 @@ router.post('/submit', protect, upload.array('files', 5), async (req, res) => {
     console.log('Request body:', req.body);
     console.log('Files:', req.files);
 
-    const { deviceType, issueDescription } = req.body;
+    const { deviceName, deviceType, issueDescription } = req.body;
     
-    if (!deviceType || !issueDescription) {
+    if (!deviceName || !deviceType || !issueDescription) {
       return res.status(400).json({
         success: false,
-        message: 'Device type and issue description are required'
+        message: 'Device name, device type, and issue description are required'
       });
     }
 
@@ -71,6 +71,7 @@ router.post('/submit', protect, upload.array('files', 5), async (req, res) => {
 
     const quote = new Quote({
       userId: req.user._id,
+      deviceName,
       deviceType,
       issueDescription,
       files: processedFiles

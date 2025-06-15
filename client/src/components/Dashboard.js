@@ -200,7 +200,10 @@ const Dashboard = () => {
                     {repairRequests.map((request) => (
                       <div key={request._id} className="repair-request-card">
                         <div className="repair-header">
-                          <h3>{request.deviceType}</h3>
+                          <div className="device-info">
+                            <h3>{request.deviceName}</h3>
+                            <span className="device-type">{request.deviceType}</span>
+                          </div>
                           <span 
                             className="status-badge"
                             style={{ backgroundColor: getStatusColor(request.status) }}

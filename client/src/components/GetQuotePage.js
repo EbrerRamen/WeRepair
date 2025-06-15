@@ -7,6 +7,7 @@ const GetQuotePage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
+    deviceName: '',
     deviceType: '',
     issueDescription: ''
   });
@@ -61,6 +62,7 @@ const GetQuotePage = () => {
 
     try {
       const formDataToSend = new FormData();
+      formDataToSend.append('deviceName', formData.deviceName);
       formDataToSend.append('deviceType', formData.deviceType);
       formDataToSend.append('issueDescription', formData.issueDescription);
       
@@ -91,6 +93,7 @@ const GetQuotePage = () => {
 
       // Reset form
       setFormData({
+        deviceName: '',
         deviceType: '',
         issueDescription: ''
       });
@@ -121,6 +124,19 @@ const GetQuotePage = () => {
         )}
 
         <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label htmlFor="deviceName">Device Name/Model:</label>
+            <input
+              type="text"
+              id="deviceName"
+              name="deviceName"
+              value={formData.deviceName}
+              onChange={handleChange}
+              placeholder="e.g., Logitech G Pro X Superlight, Razer BlackWidow V3"
+              required
+            />
+          </div>
+
           <div className="form-group">
             <label htmlFor="deviceType">Device Type:</label>
             <input

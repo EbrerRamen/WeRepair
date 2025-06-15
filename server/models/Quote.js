@@ -6,6 +6,10 @@ const quoteSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
+  deviceName: {
+    type: String,
+    required: true
+  },
   deviceType: {
     type: String,
     required: true
