@@ -17,7 +17,11 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (user?.role === 'admin') {
-      fetchUsers();
+      if (activeTab === 'users') {
+        fetchUsers();
+      } else if (activeTab === 'requests') {
+        fetchAllRepairRequests();
+      }
     } else if (activeTab === 'repairs') {
       fetchRepairRequests();
     }
@@ -49,6 +53,29 @@ const Dashboard = () => {
   const fetchRepairRequests = async () => {
     try {
       const response = await fetch('http://localhost:5000/api/quotes/my-quotes', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch repair requests');
+      }
+
+      const data = await response.json();
+      setRepairRequests(data.quotes);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchAllRepairRequests = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/quotes/all', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json'
@@ -160,6 +187,41 @@ const Dashboard = () => {
     navigate(`/edit-request/${requestId}`);
   };
 
+  const handleRejectRequest = async (requestId) => {
+    if (!window.confirm('Are you sure you want to reject this repair request?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:5000/api/quotes/${requestId}/reject`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to reject request');
+      }
+
+      // Update the request status in the state
+      setRepairRequests(prevRequests => 
+        prevRequests.map(request => 
+          request._id === requestId 
+            ? { ...request, status: 'rejected' }
+            : request
+        )
+      );
+
+      alert('Repair request rejected successfully');
+    } catch (error) {
+      console.error('Error rejecting request:', error);
+      alert(error.message || 'Failed to reject request');
+    }
+  };
+
   const renderAdminDashboard = () => (
     <div className="dashboard-content">
       {activeTab === 'overview' && (
@@ -186,6 +248,93 @@ const Dashboard = () => {
             <div className="recent-activity">
               <p className="no-activity">No recent activity to show</p>
             </div>
+          </div>
+        </motion.div>
+      )}
+
+      {activeTab === 'requests' && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="repairs-section"
+        >
+          <div className="dashboard-card">
+            <h2>Repair Requests</h2>
+            {loading ? (
+              <div className="loading">Loading repair requests...</div>
+            ) : error ? (
+              <div className="error-message">{error}</div>
+            ) : repairRequests.length === 0 ? (
+              <div className="repairs-list">
+                <p className="no-repairs">No repair requests found.</p>
+              </div>
+            ) : (
+              <div className="repairs-list">
+                {repairRequests.map((request) => (
+                  <div key={request._id} className="repair-request-card">
+                    <div className="repair-header">
+                      <div className="device-info">
+                        <h3>{request.deviceName}</h3>
+                        <span className="device-type">{request.deviceType}</span>
+                      </div>
+                      <span 
+                        className="status-badge"
+                        style={{ backgroundColor: getStatusColor(request.status) }}
+                      >
+                        {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                      </span>
+                    </div>
+                    <p className="issue-description">{request.issueDescription}</p>
+                    
+                    {request.files && request.files.length > 0 && (
+                      <div className="repair-images">
+                        {request.files.map((file, index) => (
+                          file.mimetype.startsWith('image/') ? (
+                            <div key={index} className="image-container">
+                              <img 
+                                src={`http://localhost:5000/uploads/${file.filename}`}
+                                alt={`Repair image ${index + 1}`}
+                                className="repair-image"
+                                onClick={() => handleImageClick(`http://localhost:5000/uploads/${file.filename}`)}
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = 'https://via.placeholder.com/200x200?text=Image+Not+Found';
+                                }}
+                              />
+                            </div>
+                          ) : file.mimetype.startsWith('video/') ? (
+                            <div key={index} className="video-container">
+                              <video 
+                                src={`http://localhost:5000/uploads/${file.filename}`}
+                                controls
+                                className="repair-video"
+                              />
+                            </div>
+                          ) : null
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="repair-footer">
+                      <span className="date">
+                        Submitted: {new Date(request.createdAt).toLocaleDateString()}
+                      </span>
+                      {request.status === 'pending' && (
+                        <div className="request-actions">
+                          <button 
+                            className="btn-secondary reject-button"
+                            onClick={() => handleRejectRequest(request._id)}
+                          >
+                            Reject Request
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </motion.div>
       )}
@@ -446,6 +595,12 @@ const Dashboard = () => {
                 onClick={() => setActiveTab('overview')}
               >
                 Overview
+              </button>
+              <button 
+                className={`tab ${activeTab === 'requests' ? 'active' : ''}`}
+                onClick={() => setActiveTab('requests')}
+              >
+                Requests
               </button>
               <button 
                 className={`tab ${activeTab === 'users' ? 'active' : ''}`}
