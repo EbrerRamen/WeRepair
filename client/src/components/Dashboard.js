@@ -300,7 +300,7 @@ const Dashboard = () => {
           className="repairs-section"
         >
           <div className="dashboard-card">
-            <h2>My Repair Requests</h2>
+            <h2>Requests</h2>
             {loading ? (
               <div className="loading">Loading your repair requests...</div>
             ) : error ? (
@@ -472,7 +472,7 @@ const Dashboard = () => {
                 className={`tab ${activeTab === 'repairs' ? 'active' : ''}`}
                 onClick={() => setActiveTab('repairs')}
               >
-                My Repairs
+                Requests
               </button>
               <button 
                 className={`tab ${activeTab === 'profile' ? 'active' : ''}`}
