@@ -30,7 +30,8 @@ router.put('/profile', protect, async (req, res) => {
     
     if (name) user.name = name;
     if (email) user.email = email;
-    if (phone) user.phone = phone;
+    // Update phone regardless of whether it's empty or not
+    user.phone = phone || null;
 
     await user.save();
 

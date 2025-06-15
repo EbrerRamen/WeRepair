@@ -30,13 +30,19 @@ const EditProfile = () => {
     setIsLoading(true);
 
     try {
+      // Create a copy of formData and handle empty phone
+      const dataToSend = {
+        ...formData,
+        phone: formData.phone.trim() || null // Convert empty string to null
+      };
+
       const response = await fetch('http://localhost:5000/api/users/profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(dataToSend)
       });
 
       const data = await response.json();
@@ -95,14 +101,14 @@ const EditProfile = () => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="phone">Phone Number</label>
+            <label htmlFor="phone">Phone Number (Optional)</label>
             <input
               type="tel"
               id="phone"
               name="phone"
               value={formData.phone}
               onChange={handleChange}
-              required
+              placeholder="Enter your phone number"
             />
           </div>
 

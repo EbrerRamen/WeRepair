@@ -110,6 +110,10 @@ const Dashboard = () => {
     setSelectedImage(null);
   };
 
+  const handleEditRequest = (requestId) => {
+    navigate(`/edit-request/${requestId}`);
+  };
+
   return (
     <div className="dashboard-page">
       <div className="dashboard-container">
@@ -256,13 +260,21 @@ const Dashboard = () => {
                             Submitted: {new Date(request.createdAt).toLocaleDateString()}
                           </span>
                           {request.status === 'pending' && (
-                            <button 
-                              className="btn-secondary cancel-button"
-                              onClick={() => handleCancelRequest(request._id)}
-                              disabled={cancellingId === request._id}
-                            >
-                              {cancellingId === request._id ? 'Cancelling...' : 'Cancel Request'}
-                            </button>
+                            <div className="request-actions">
+                              <button 
+                                className="btn-secondary edit-button"
+                                onClick={() => handleEditRequest(request._id)}
+                              >
+                                Edit Request
+                              </button>
+                              <button 
+                                className="btn-secondary cancel-button"
+                                onClick={() => handleCancelRequest(request._id)}
+                                disabled={cancellingId === request._id}
+                              >
+                                {cancellingId === request._id ? 'Cancelling...' : 'Cancel Request'}
+                              </button>
+                            </div>
                           )}
                         </div>
                       </div>
