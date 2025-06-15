@@ -60,36 +60,34 @@ const GetQuotePage = () => {
     setError(null);
 
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('You must be logged in to submit a quote');
-      }
+      const formDataToSend = new FormData();
+      formDataToSend.append('deviceType', formData.deviceType);
+      formDataToSend.append('issueDescription', formData.issueDescription);
+      
+      // Append each file to the FormData
+      files.forEach((file, index) => {
+        formDataToSend.append('files', file);
+      });
 
-      console.log('Submitting quote request...');
       const response = await fetch('http://localhost:5000/api/quotes/submit', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify({
-          deviceType: formData.deviceType,
-          issueDescription: formData.issueDescription
-        })
+        body: formDataToSend
       });
 
-      console.log('Response status:', response.status);
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        throw new Error('Server returned non-JSON response');
+      if (!response.ok) {
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          throw new Error('Server returned non-JSON response');
+        }
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to submit quote');
       }
 
       const data = await response.json();
       console.log('Response data:', data);
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to submit quote');
-      }
 
       // Reset form
       setFormData({

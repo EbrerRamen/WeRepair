@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -8,6 +8,53 @@ const Dashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
+  const [repairRequests, setRepairRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchRepairRequests = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/quotes/my-quotes', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch repair requests');
+        }
+
+        const data = await response.json();
+        setRepairRequests(data.quotes);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (activeTab === 'repairs') {
+      fetchRepairRequests();
+    }
+  }, [activeTab]);
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'pending':
+        return '#FFA500';
+      case 'reviewed':
+        return '#4169E1';
+      case 'accepted':
+        return '#32CD32';
+      case 'rejected':
+        return '#FF0000';
+      default:
+        return '#666';
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -104,9 +151,69 @@ const Dashboard = () => {
             >
               <div className="dashboard-card">
                 <h2>My Repair Requests</h2>
-                <div className="repairs-list">
-                  <p className="no-repairs">No repair requests yet. Start by requesting a repair!</p>
-                </div>
+                {loading ? (
+                  <div className="loading">Loading your repair requests...</div>
+                ) : error ? (
+                  <div className="error-message">{error}</div>
+                ) : repairRequests.length === 0 ? (
+                  <div className="repairs-list">
+                    <p className="no-repairs">No repair requests yet. Start by requesting a repair!</p>
+                  </div>
+                ) : (
+                  <div className="repairs-list">
+                    {repairRequests.map((request) => (
+                      <div key={request._id} className="repair-request-card">
+                        <div className="repair-header">
+                          <h3>{request.deviceType}</h3>
+                          <span 
+                            className="status-badge"
+                            style={{ backgroundColor: getStatusColor(request.status) }}
+                          >
+                            {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                          </span>
+                        </div>
+                        <p className="issue-description">{request.issueDescription}</p>
+                        
+                        {request.files && request.files.length > 0 && (
+                          <div className="repair-images">
+                            {request.files.map((file, index) => (
+                              file.mimetype.startsWith('image/') ? (
+                                <div key={index} className="image-container">
+                                  <img 
+                                    src={`http://localhost:5000/uploads/${file.filename}`}
+                                    alt={`Repair image ${index + 1}`}
+                                    className="repair-image"
+                                    onError={(e) => {
+                                      e.target.onerror = null;
+                                      e.target.src = 'https://via.placeholder.com/200x200?text=Image+Not+Found';
+                                    }}
+                                  />
+                                </div>
+                              ) : file.mimetype.startsWith('video/') ? (
+                                <div key={index} className="video-container">
+                                  <video 
+                                    src={`http://localhost:5000/uploads/${file.filename}`}
+                                    controls
+                                    className="repair-video"
+                                  />
+                                </div>
+                              ) : null
+                            ))}
+                          </div>
+                        )}
+
+                        <div className="repair-footer">
+                          <span className="date">
+                            Submitted: {new Date(request.createdAt).toLocaleDateString()}
+                          </span>
+                          {request.status === 'pending' && (
+                            <button className="btn-secondary">Cancel Request</button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </motion.div>
           )}

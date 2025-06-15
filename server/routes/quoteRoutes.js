@@ -46,10 +46,11 @@ const handleMulterError = (err, req, res, next) => {
 };
 
 // Submit a new quote
-router.post('/submit', protect, async (req, res) => {
+router.post('/submit', protect, upload.array('files', 5), async (req, res) => {
   try {
     console.log('Received quote submission request');
     console.log('Request body:', req.body);
+    console.log('Files:', req.files);
 
     const { deviceType, issueDescription } = req.body;
     
@@ -60,11 +61,18 @@ router.post('/submit', protect, async (req, res) => {
       });
     }
 
+    // Process uploaded files
+    const processedFiles = req.files ? req.files.map(file => ({
+      filename: file.filename,
+      path: file.path,
+      mimetype: file.mimetype
+    })) : [];
+
     const quote = new Quote({
       userId: req.user._id,
       deviceType,
       issueDescription,
-      files: [] // Empty array for now
+      files: processedFiles
     });
 
     await quote.save();
