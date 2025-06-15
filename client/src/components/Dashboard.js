@@ -13,35 +13,83 @@ const Dashboard = () => {
   const [error, setError] = useState(null);
   const [cancellingId, setCancellingId] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [users, setUsers] = useState([]);
 
   useEffect(() => {
-    const fetchRepairRequests = async () => {
-      try {
-        const response = await fetch('http://localhost:5000/api/quotes/my-quotes', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-            'Content-Type': 'application/json'
-          },
-          credentials: 'include'
-        });
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch repair requests');
-        }
-
-        const data = await response.json();
-        setRepairRequests(data.quotes);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (activeTab === 'repairs') {
+    if (user?.role === 'admin') {
+      fetchUsers();
+    } else if (activeTab === 'repairs') {
       fetchRepairRequests();
     }
-  }, [activeTab]);
+  }, [activeTab, user?.role]);
+
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/users/all', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch users');
+      }
+
+      const data = await response.json();
+      setUsers(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchRepairRequests = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/quotes/my-quotes', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch repair requests');
+      }
+
+      const data = await response.json();
+      setRepairRequests(data.quotes);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateUserRole = async (userId, newRole) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/users/${userId}/role`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ role: newRole })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update user role');
+      }
+
+      // Refresh users list
+      fetchUsers();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -87,12 +135,10 @@ const Dashboard = () => {
         throw new Error(data.message || 'Failed to cancel request');
       }
 
-      // Remove the cancelled request from the state
       setRepairRequests(prevRequests => 
         prevRequests.filter(request => request._id !== requestId)
       );
 
-      // Show success message
       alert('Repair request cancelled successfully');
     } catch (error) {
       console.error('Error cancelling request:', error);
@@ -114,6 +160,255 @@ const Dashboard = () => {
     navigate(`/edit-request/${requestId}`);
   };
 
+  const renderAdminDashboard = () => (
+    <div className="dashboard-content">
+      {activeTab === 'overview' && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="overview-section"
+        >
+          <div className="dashboard-card">
+            <h2>Admin Overview</h2>
+            <div className="action-buttons">
+              <Link to="/manage-quotes" className="btn-primary">
+                Manage Repair Quotes
+              </Link>
+              <Link to="/manage-users" className="btn-secondary">
+                Manage Users
+              </Link>
+            </div>
+          </div>
+
+          <div className="dashboard-card">
+            <h2>Recent Activity</h2>
+            <div className="recent-activity">
+              <p className="no-activity">No recent activity to show</p>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {activeTab === 'users' && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="users-section"
+        >
+          <div className="dashboard-card">
+            <h2>User Management</h2>
+            {loading ? (
+              <div className="loading">Loading users...</div>
+            ) : error ? (
+              <div className="error-message">{error}</div>
+            ) : (
+              <div className="users-list">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Role</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {users.map(user => (
+                      <tr key={user._id}>
+                        <td>{user.name}</td>
+                        <td>{user.email}</td>
+                        <td>{user.role}</td>
+                        <td>
+                          <select 
+                            value={user.role}
+                            onChange={(e) => updateUserRole(user._id, e.target.value)}
+                          >
+                            <option value="user">User</option>
+                            <option value="admin">Admin</option>
+                          </select>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </motion.div>
+      )}
+
+      {activeTab === 'quotes' && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="quotes-section"
+        >
+          <div className="dashboard-card">
+            <h2>Repair Quotes</h2>
+            {loading ? (
+              <div className="loading">Loading quotes...</div>
+            ) : error ? (
+              <div className="error-message">{error}</div>
+            ) : (
+              <div className="quotes-list">
+                {/* Quote management UI will go here */}
+                <p>Quote management interface coming soon...</p>
+              </div>
+            )}
+          </div>
+        </motion.div>
+      )}
+    </div>
+  );
+
+  const renderUserDashboard = () => (
+    <div className="dashboard-content">
+      {activeTab === 'overview' && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="overview-section"
+        >
+          <div className="dashboard-card">
+            <h2>Quick Actions</h2>
+            <div className="action-buttons">
+              <Link to="/contact" className="btn-primary">
+                Request New Repair
+              </Link>
+              <button className="btn-secondary">View History</button>
+            </div>
+          </div>
+
+          <div className="dashboard-card">
+            <h2>Recent Activity</h2>
+            <div className="recent-activity">
+              <p className="no-activity">No recent activity to show</p>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {activeTab === 'repairs' && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="repairs-section"
+        >
+          <div className="dashboard-card">
+            <h2>My Repair Requests</h2>
+            {loading ? (
+              <div className="loading">Loading your repair requests...</div>
+            ) : error ? (
+              <div className="error-message">{error}</div>
+            ) : repairRequests.length === 0 ? (
+              <div className="repairs-list">
+                <p className="no-repairs">No repair requests yet. Start by requesting a repair!</p>
+              </div>
+            ) : (
+              <div className="repairs-list">
+                {repairRequests.map((request) => (
+                  <div key={request._id} className="repair-request-card">
+                    <div className="repair-header">
+                      <div className="device-info">
+                        <h3>{request.deviceName}</h3>
+                        <span className="device-type">{request.deviceType}</span>
+                      </div>
+                      <span 
+                        className="status-badge"
+                        style={{ backgroundColor: getStatusColor(request.status) }}
+                      >
+                        {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                      </span>
+                    </div>
+                    <p className="issue-description">{request.issueDescription}</p>
+                    
+                    {request.files && request.files.length > 0 && (
+                      <div className="repair-images">
+                        {request.files.map((file, index) => (
+                          file.mimetype.startsWith('image/') ? (
+                            <div key={index} className="image-container">
+                              <img 
+                                src={`http://localhost:5000/uploads/${file.filename}`}
+                                alt={`Repair image ${index + 1}`}
+                                className="repair-image"
+                                onClick={() => handleImageClick(`http://localhost:5000/uploads/${file.filename}`)}
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = 'https://via.placeholder.com/200x200?text=Image+Not+Found';
+                                }}
+                              />
+                            </div>
+                          ) : file.mimetype.startsWith('video/') ? (
+                            <div key={index} className="video-container">
+                              <video 
+                                src={`http://localhost:5000/uploads/${file.filename}`}
+                                controls
+                                className="repair-video"
+                              />
+                            </div>
+                          ) : null
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="repair-footer">
+                      <span className="date">
+                        Submitted: {new Date(request.createdAt).toLocaleDateString()}
+                      </span>
+                      {request.status === 'pending' && (
+                        <div className="request-actions">
+                          <button 
+                            className="btn-secondary edit-button"
+                            onClick={() => handleEditRequest(request._id)}
+                          >
+                            Edit Request
+                          </button>
+                          <button 
+                            className="btn-secondary cancel-button"
+                            onClick={() => handleCancelRequest(request._id)}
+                            disabled={cancellingId === request._id}
+                          >
+                            {cancellingId === request._id ? 'Cancelling...' : 'Cancel Request'}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </motion.div>
+      )}
+
+      {activeTab === 'profile' && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="profile-section"
+        >
+          <div className="dashboard-card">
+            <h2>Your Profile</h2>
+            <div className="profile-info">
+              <p><strong>Name:</strong> {user?.name}</p>
+              <p><strong>Email:</strong> {user?.email}</p>
+              <p><strong>Phone:</strong> {user?.phone || 'Not provided'}</p>
+            </div>
+            <div className="action-buttons">
+              <Link to="/edit-profile" className="btn-secondary">Edit Profile</Link>
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </div>
+  );
+
   return (
     <div className="dashboard-page">
       <div className="dashboard-container">
@@ -130,7 +425,7 @@ const Dashboard = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            Manage your repair requests and account settings
+            {user?.role === 'admin' ? 'Manage users and repair quotes' : 'Manage your repair requests and account settings'}
           </motion.p>
           <motion.button
             className="logout-btn"
@@ -144,168 +439,52 @@ const Dashboard = () => {
         </div>
 
         <div className="dashboard-tabs">
-          <button 
-            className={`tab ${activeTab === 'overview' ? 'active' : ''}`}
-            onClick={() => setActiveTab('overview')}
-          >
-            Overview
-          </button>
-          <button 
-            className={`tab ${activeTab === 'repairs' ? 'active' : ''}`}
-            onClick={() => setActiveTab('repairs')}
-          >
-            My Repairs
-          </button>
-          <button 
-            className={`tab ${activeTab === 'profile' ? 'active' : ''}`}
-            onClick={() => setActiveTab('profile')}
-          >
-            Profile
-          </button>
-        </div>
-
-        <div className="dashboard-content">
-          {activeTab === 'overview' && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5 }}
-              className="overview-section"
-            >
-              <div className="dashboard-card">
-                <h2>Quick Actions</h2>
-                <div className="action-buttons">
-                  <Link to="/contact" className="btn-primary">
-                    Request New Repair
-                  </Link>
-                  <button className="btn-secondary">View History</button>
-                </div>
-              </div>
-
-              <div className="dashboard-card">
-                <h2>Recent Activity</h2>
-                <div className="recent-activity">
-                  <p className="no-activity">No recent activity to show</p>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {activeTab === 'repairs' && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5 }}
-              className="repairs-section"
-            >
-              <div className="dashboard-card">
-                <h2>My Repair Requests</h2>
-                {loading ? (
-                  <div className="loading">Loading your repair requests...</div>
-                ) : error ? (
-                  <div className="error-message">{error}</div>
-                ) : repairRequests.length === 0 ? (
-                  <div className="repairs-list">
-                    <p className="no-repairs">No repair requests yet. Start by requesting a repair!</p>
-                  </div>
-                ) : (
-                  <div className="repairs-list">
-                    {repairRequests.map((request) => (
-                      <div key={request._id} className="repair-request-card">
-                        <div className="repair-header">
-                          <div className="device-info">
-                            <h3>{request.deviceName}</h3>
-                            <span className="device-type">{request.deviceType}</span>
-                          </div>
-                          <span 
-                            className="status-badge"
-                            style={{ backgroundColor: getStatusColor(request.status) }}
-                          >
-                            {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
-                          </span>
-                        </div>
-                        <p className="issue-description">{request.issueDescription}</p>
-                        
-                        {request.files && request.files.length > 0 && (
-                          <div className="repair-images">
-                            {request.files.map((file, index) => (
-                              file.mimetype.startsWith('image/') ? (
-                                <div key={index} className="image-container">
-                                  <img 
-                                    src={`http://localhost:5000/uploads/${file.filename}`}
-                                    alt={`Repair image ${index + 1}`}
-                                    className="repair-image"
-                                    onClick={() => handleImageClick(`http://localhost:5000/uploads/${file.filename}`)}
-                                    onError={(e) => {
-                                      e.target.onerror = null;
-                                      e.target.src = 'https://via.placeholder.com/200x200?text=Image+Not+Found';
-                                    }}
-                                  />
-                                </div>
-                              ) : file.mimetype.startsWith('video/') ? (
-                                <div key={index} className="video-container">
-                                  <video 
-                                    src={`http://localhost:5000/uploads/${file.filename}`}
-                                    controls
-                                    className="repair-video"
-                                  />
-                                </div>
-                              ) : null
-                            ))}
-                          </div>
-                        )}
-
-                        <div className="repair-footer">
-                          <span className="date">
-                            Submitted: {new Date(request.createdAt).toLocaleDateString()}
-                          </span>
-                          {request.status === 'pending' && (
-                            <div className="request-actions">
-                              <button 
-                                className="btn-secondary edit-button"
-                                onClick={() => handleEditRequest(request._id)}
-                              >
-                                Edit Request
-                              </button>
-                              <button 
-                                className="btn-secondary cancel-button"
-                                onClick={() => handleCancelRequest(request._id)}
-                                disabled={cancellingId === request._id}
-                              >
-                                {cancellingId === request._id ? 'Cancelling...' : 'Cancel Request'}
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          )}
-
-          {activeTab === 'profile' && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5 }}
-              className="profile-section"
-            >
-              <div className="dashboard-card">
-                <h2>Your Profile</h2>
-                <div className="profile-info">
-                  <p><strong>Name:</strong> {user?.name}</p>
-                  <p><strong>Email:</strong> {user?.email}</p>
-                  <p><strong>Phone:</strong> {user?.phone || 'Not provided'}</p>
-                </div>
-                <div className="action-buttons">
-                  <Link to="/edit-profile" className="btn-secondary">Edit Profile</Link>
-                </div>
-              </div>
-            </motion.div>
+          {user?.role === 'admin' ? (
+            <>
+              <button 
+                className={`tab ${activeTab === 'overview' ? 'active' : ''}`}
+                onClick={() => setActiveTab('overview')}
+              >
+                Overview
+              </button>
+              <button 
+                className={`tab ${activeTab === 'users' ? 'active' : ''}`}
+                onClick={() => setActiveTab('users')}
+              >
+                Users
+              </button>
+              <button 
+                className={`tab ${activeTab === 'quotes' ? 'active' : ''}`}
+                onClick={() => setActiveTab('quotes')}
+              >
+                Quotes
+              </button>
+            </>
+          ) : (
+            <>
+              <button 
+                className={`tab ${activeTab === 'overview' ? 'active' : ''}`}
+                onClick={() => setActiveTab('overview')}
+              >
+                Overview
+              </button>
+              <button 
+                className={`tab ${activeTab === 'repairs' ? 'active' : ''}`}
+                onClick={() => setActiveTab('repairs')}
+              >
+                My Repairs
+              </button>
+              <button 
+                className={`tab ${activeTab === 'profile' ? 'active' : ''}`}
+                onClick={() => setActiveTab('profile')}
+              >
+                Profile
+              </button>
+            </>
           )}
         </div>
+
+        {user?.role === 'admin' ? renderAdminDashboard() : renderUserDashboard()}
       </div>
 
       {/* Image Modal */}
