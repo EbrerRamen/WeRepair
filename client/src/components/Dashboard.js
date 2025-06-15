@@ -12,6 +12,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [cancellingId, setCancellingId] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   useEffect(() => {
     const fetchRepairRequests = async () => {
@@ -99,6 +100,14 @@ const Dashboard = () => {
     } finally {
       setCancellingId(null);
     }
+  };
+
+  const handleImageClick = (imageUrl) => {
+    setSelectedImage(imageUrl);
+  };
+
+  const closeModal = () => {
+    setSelectedImage(null);
   };
 
   return (
@@ -222,6 +231,7 @@ const Dashboard = () => {
                                     src={`http://localhost:5000/uploads/${file.filename}`}
                                     alt={`Repair image ${index + 1}`}
                                     className="repair-image"
+                                    onClick={() => handleImageClick(`http://localhost:5000/uploads/${file.filename}`)}
                                     onError={(e) => {
                                       e.target.onerror = null;
                                       e.target.src = 'https://via.placeholder.com/200x200?text=Image+Not+Found';
@@ -285,6 +295,16 @@ const Dashboard = () => {
           )}
         </div>
       </div>
+
+      {/* Image Modal */}
+      {selectedImage && (
+        <div className="image-modal" onClick={closeModal}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <button className="close-modal" onClick={closeModal}>×</button>
+            <img src={selectedImage} alt="Full size" className="full-size-image" />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
