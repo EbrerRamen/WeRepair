@@ -156,6 +156,111 @@ const Dashboard = () => {
     }
   };
 
+  const handleRejectRequest = async (requestId) => {
+    if (!window.confirm('Are you sure you want to reject this repair request?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:5000/api/quotes/${requestId}/reject`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to reject request');
+      }
+
+      // Update the request status in the state
+      setRepairRequests(prevRequests => 
+        prevRequests.map(request => 
+          request._id === requestId 
+            ? { ...request, status: 'rejected' }
+            : request
+        )
+      );
+
+      alert('Repair request rejected successfully');
+    } catch (error) {
+      console.error('Error rejecting request:', error);
+      alert(error.message || 'Failed to reject request');
+    }
+  };
+
+  const handleReviewRequest = async (requestId) => {
+    if (!window.confirm('Are you sure you want to review this repair request?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:5000/api/quotes/${requestId}/review`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to review request');
+      }
+
+      // Update the request status in the state
+      setRepairRequests(prevRequests => 
+        prevRequests.map(request => 
+          request._id === requestId 
+            ? { ...request, status: 'reviewed' }
+            : request
+        )
+      );
+
+      alert('Repair request reviewed successfully');
+    } catch (error) {
+      console.error('Error reviewing request:', error);
+      alert(error.message || 'Failed to review request');
+    }
+  };
+
+  const handleAcceptRequest = async (requestId) => {
+    if (!window.confirm('Are you sure you want to accept this repair request?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:5000/api/quotes/${requestId}/accept`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to accept request');
+      }
+
+      // Update the request status in the state
+      setRepairRequests(prevRequests => 
+        prevRequests.map(request => 
+          request._id === requestId 
+            ? { ...request, status: 'accepted' }
+            : request
+        )
+      );
+
+      alert('Repair request accepted successfully');
+    } catch (error) {
+      console.error('Error accepting request:', error);
+      alert(error.message || 'Failed to accept request');
+    }
+  };
+
   const handleImageClick = (imageUrl) => {
     setSelectedImage(imageUrl);
   };
@@ -315,21 +420,34 @@ const Dashboard = () => {
                       <span className="date">
                         Submitted: {new Date(request.createdAt).toLocaleDateString()}
                       </span>
-                      <div className="request-actions">
-                        <button 
-                          className="btn-secondary edit-button"
-                          onClick={() => handleEditRequest(request._id)}
-                        >
-                          Edit Request
-                        </button>
-                        <button 
-                          className="btn-secondary cancel-button"
-                          onClick={() => handleCancelRequest(request._id)}
-                          disabled={cancellingId === request._id}
-                        >
-                          {cancellingId === request._id ? 'Cancelling...' : 'Cancel Request'}
-                        </button>
-                      </div>
+                      {user?.role === 'admin' && (
+                        <div className="request-actions">
+                          {request.status === 'pending' && (
+                            <button 
+                              className="btn-secondary review-button"
+                              onClick={() => handleReviewRequest(request._id)}
+                            >
+                              Review Request
+                            </button>
+                          )}
+                          {request.status === 'reviewed' && (
+                            <>
+                              <button 
+                                className="btn-primary accept-button"
+                                onClick={() => handleAcceptRequest(request._id)}
+                              >
+                                Accept Request
+                              </button>
+                              <button 
+                                className="btn-secondary reject-button"
+                                onClick={() => handleRejectRequest(request._id)}
+                              >
+                                Reject Request
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}

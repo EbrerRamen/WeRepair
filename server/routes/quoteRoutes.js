@@ -270,4 +270,142 @@ router.delete('/:quoteId/files/:fileId', protect, async (req, res) => {
   }
 });
 
+// Review a quote request (admin only)
+router.put('/:id/review', protect, async (req, res) => {
+  try {
+    // Check if user is admin
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to review quotes'
+      });
+    }
+
+    const quote = await Quote.findById(req.params.id);
+    if (!quote) {
+      return res.status(404).json({
+        success: false,
+        message: 'Quote not found'
+      });
+    }
+
+    // Only allow reviewing pending quotes
+    if (quote.status !== 'pending') {
+      return res.status(400).json({
+        success: false,
+        message: 'Can only review pending quotes'
+      });
+    }
+
+    quote.status = 'reviewed';
+    quote.updatedAt = Date.now();
+    await quote.save();
+
+    res.json({
+      success: true,
+      message: 'Quote reviewed successfully',
+      quote
+    });
+  } catch (error) {
+    console.error('Error reviewing quote:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error reviewing quote',
+      error: error.message
+    });
+  }
+});
+
+// Reject a quote request (admin only)
+router.put('/:id/reject', protect, async (req, res) => {
+  try {
+    // Check if user is admin
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to reject quotes'
+      });
+    }
+
+    const quote = await Quote.findById(req.params.id);
+    if (!quote) {
+      return res.status(404).json({
+        success: false,
+        message: 'Quote not found'
+      });
+    }
+
+    // Only allow rejecting reviewed quotes
+    if (quote.status !== 'reviewed') {
+      return res.status(400).json({
+        success: false,
+        message: 'Can only reject reviewed quotes'
+      });
+    }
+
+    quote.status = 'rejected';
+    quote.updatedAt = Date.now();
+    await quote.save();
+
+    res.json({
+      success: true,
+      message: 'Quote rejected successfully',
+      quote
+    });
+  } catch (error) {
+    console.error('Error rejecting quote:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error rejecting quote',
+      error: error.message
+    });
+  }
+});
+
+// Accept a quote request (admin only)
+router.put('/:id/accept', protect, async (req, res) => {
+  try {
+    // Check if user is admin
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to accept quotes'
+      });
+    }
+
+    const quote = await Quote.findById(req.params.id);
+    if (!quote) {
+      return res.status(404).json({
+        success: false,
+        message: 'Quote not found'
+      });
+    }
+
+    // Only allow accepting reviewed quotes
+    if (quote.status !== 'reviewed') {
+      return res.status(400).json({
+        success: false,
+        message: 'Can only accept reviewed quotes'
+      });
+    }
+
+    quote.status = 'accepted';
+    quote.updatedAt = Date.now();
+    await quote.save();
+
+    res.json({
+      success: true,
+      message: 'Quote accepted successfully',
+      quote
+    });
+  } catch (error) {
+    console.error('Error accepting quote:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error accepting quote',
+      error: error.message
+    });
+  }
+});
+
 module.exports = router; 
