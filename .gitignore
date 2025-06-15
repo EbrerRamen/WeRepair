@@ -63,4 +63,7 @@ var/
 *.out
 *.pid
 *.gz
-*.swp 
+*.swp
+
+# uploads directory
+server/uploads/ 
