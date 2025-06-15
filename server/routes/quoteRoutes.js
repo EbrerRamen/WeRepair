@@ -4,6 +4,7 @@ const multer = require('multer');
 const path = require('path');
 const Quote = require('../models/Quote');
 const { protect } = require('../middleware/auth');
+const fs = require('fs');
 
 // Configure multer for file upload
 const storage = multer.diskStorage({
@@ -135,6 +136,49 @@ router.get('/:id', protect, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error fetching quote',
+      error: error.message
+    });
+  }
+});
+
+// Cancel a quote request
+router.delete('/:id', protect, async (req, res) => {
+  try {
+    const quote = await Quote.findOne({
+      _id: req.params.id,
+      userId: req.user._id,
+      status: 'pending' // Only allow cancellation of pending requests
+    });
+
+    if (!quote) {
+      return res.status(404).json({
+        success: false,
+        message: 'Quote not found or cannot be cancelled'
+      });
+    }
+
+    // Delete associated files
+    if (quote.files && quote.files.length > 0) {
+      quote.files.forEach(file => {
+        const filePath = path.join(__dirname, '../uploads', file.filename);
+        fs.unlink(filePath, (err) => {
+          if (err) console.error('Error deleting file:', err);
+        });
+      });
+    }
+
+    // Delete the quote
+    await quote.deleteOne();
+
+    res.json({
+      success: true,
+      message: 'Quote request cancelled successfully'
+    });
+  } catch (error) {
+    console.error('Error cancelling quote:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error cancelling quote request',
       error: error.message
     });
   }

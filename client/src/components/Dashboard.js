@@ -11,6 +11,7 @@ const Dashboard = () => {
   const [repairRequests, setRepairRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [cancellingId, setCancellingId] = useState(null);
 
   useEffect(() => {
     const fetchRepairRequests = async () => {
@@ -62,6 +63,41 @@ const Dashboard = () => {
       navigate('/');
     } catch (error) {
       console.error('Failed to logout:', error);
+    }
+  };
+
+  const handleCancelRequest = async (requestId) => {
+    if (!window.confirm('Are you sure you want to cancel this repair request?')) {
+      return;
+    }
+
+    setCancellingId(requestId);
+    try {
+      const response = await fetch(`http://localhost:5000/api/quotes/${requestId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to cancel request');
+      }
+
+      // Remove the cancelled request from the state
+      setRepairRequests(prevRequests => 
+        prevRequests.filter(request => request._id !== requestId)
+      );
+
+      // Show success message
+      alert('Repair request cancelled successfully');
+    } catch (error) {
+      console.error('Error cancelling request:', error);
+      alert(error.message || 'Failed to cancel request');
+    } finally {
+      setCancellingId(null);
     }
   };
 
@@ -207,7 +243,13 @@ const Dashboard = () => {
                             Submitted: {new Date(request.createdAt).toLocaleDateString()}
                           </span>
                           {request.status === 'pending' && (
-                            <button className="btn-secondary">Cancel Request</button>
+                            <button 
+                              className="btn-secondary cancel-button"
+                              onClick={() => handleCancelRequest(request._id)}
+                              disabled={cancellingId === request._id}
+                            >
+                              {cancellingId === request._id ? 'Cancelling...' : 'Cancel Request'}
+                            </button>
                           )}
                         </div>
                       </div>
