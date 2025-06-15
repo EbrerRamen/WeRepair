@@ -5,7 +5,6 @@ const path = require('path');
 const Quote = require('../models/Quote');
 const { protect } = require('../middleware/auth');
 const fs = require('fs');
-const User = require('../models/User');
 
 // Configure multer for file upload
 const storage = multer.diskStorage({
@@ -101,6 +100,34 @@ router.get('/my-quotes', protect, async (req, res) => {
   try {
     const quotes = await Quote.find({ userId: req.user._id })
       .sort({ createdAt: -1 });
+    
+    res.json({
+      success: true,
+      quotes
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching quotes',
+      error: error.message
+    });
+  }
+});
+
+// Get all quotes (admin only)
+router.get('/all', protect, async (req, res) => {
+  try {
+    // Check if user is admin
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to access all quotes'
+      });
+    }
+
+    const quotes = await Quote.find()
+      .sort({ createdAt: -1 })
+      .populate('userId', 'name email');
     
     res.json({
       success: true,
@@ -240,50 +267,6 @@ router.delete('/:quoteId/files/:fileId', protect, async (req, res) => {
   } catch (error) {
     console.error('Error removing file:', error);
     res.status(500).json({ message: 'Error removing file' });
-  }
-});
-
-// Get all repair requests (admin only)
-router.get('/all', protect, async (req, res) => {
-  try {
-    // Check if user is admin
-    const user = await User.findById(req.user.id);
-    if (!user || user.role !== 'admin') {
-      return res.status(403).json({ message: 'Access denied. Admin only.' });
-    }
-
-    const quotes = await Quote.find()
-      .populate('userId', 'name email phone')
-      .sort({ createdAt: -1 });
-
-    res.json({ quotes });
-  } catch (error) {
-    console.error('Error fetching all repair requests:', error);
-    res.status(500).json({ message: 'Error fetching repair requests' });
-  }
-});
-
-// Reject a repair request (admin only)
-router.put('/:id/reject', protect, async (req, res) => {
-  try {
-    // Check if user is admin
-    const user = await User.findById(req.user.id);
-    if (!user || user.role !== 'admin') {
-      return res.status(403).json({ message: 'Access denied. Admin only.' });
-    }
-
-    const quote = await Quote.findById(req.params.id);
-    if (!quote) {
-      return res.status(404).json({ message: 'Repair request not found' });
-    }
-
-    quote.status = 'rejected';
-    await quote.save();
-
-    res.json({ message: 'Repair request rejected successfully', quote });
-  } catch (error) {
-    console.error('Error rejecting repair request:', error);
-    res.status(500).json({ message: 'Error rejecting repair request' });
   }
 });
 
