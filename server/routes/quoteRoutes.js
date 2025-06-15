@@ -185,4 +185,61 @@ router.delete('/:id', protect, async (req, res) => {
   }
 });
 
+// Update a quote request
+router.put('/:id', protect, upload.array('files', 5), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { deviceName, deviceType, issueDescription } = req.body;
+    const files = req.files;
+
+    const quote = await Quote.findById(id);
+    if (!quote) {
+      return res.status(404).json({ message: 'Quote not found' });
+    }
+
+    // Update quote fields
+    quote.deviceName = deviceName;
+    quote.deviceType = deviceType;
+    quote.issueDescription = issueDescription;
+
+    // Add new files if any
+    if (files && files.length > 0) {
+      quote.files.push(...files);
+    }
+
+    await quote.save();
+    res.json({ message: 'Quote updated successfully', quote });
+  } catch (error) {
+    console.error('Error updating quote:', error);
+    res.status(500).json({ message: 'Error updating quote' });
+  }
+});
+
+// Remove a file from a quote request
+router.delete('/:quoteId/files/:fileId', protect, async (req, res) => {
+  try {
+    const { quoteId, fileId } = req.params;
+
+    const quote = await Quote.findById(quoteId);
+    if (!quote) {
+      return res.status(404).json({ message: 'Quote not found' });
+    }
+
+    // Find the file in the quote's files array
+    const fileIndex = quote.files.findIndex(file => file._id.toString() === fileId);
+    if (fileIndex === -1) {
+      return res.status(404).json({ message: 'File not found' });
+    }
+
+    // Remove the file from the array
+    quote.files.splice(fileIndex, 1);
+    await quote.save();
+
+    res.json({ message: 'File removed successfully' });
+  } catch (error) {
+    console.error('Error removing file:', error);
+    res.status(500).json({ message: 'Error removing file' });
+  }
+});
+
 module.exports = router; 

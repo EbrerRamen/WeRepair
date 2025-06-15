@@ -9,6 +9,7 @@ import RegisterPage from './components/RegisterPage';
 import Dashboard from './components/Dashboard';
 import AdminDashboard from './components/AdminDashboard';
 import EditProfile from './components/EditProfile';
+import EditRequestPage from './components/EditRequestPage';
 import './App.css';
 
 function App() {
@@ -38,6 +39,11 @@ function App() {
               } 
             />
             <Route path="/edit-profile" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
+            <Route path="/edit-request/:requestId" element={
+              <ProtectedRoute>
+                <EditRequestPage />
+              </ProtectedRoute>
+            } />
           </Routes>
     </div>
       </Router>
