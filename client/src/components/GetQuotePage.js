@@ -1,14 +1,19 @@
 import React, { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import './GetQuotePage.css';
 
 const GetQuotePage = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     deviceType: '',
-    issueDescription: '',
-    name: '',
-    email: '',
-    phone: ''
+    issueDescription: ''
   });
+  const [files, setFiles] = useState([]);
+  const [previewUrls, setPreviewUrls] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -18,18 +23,91 @@ const GetQuotePage = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log('Quote Request Submitted:', formData);
-    alert('Your quote request has been submitted! We will get back to you soon.');
-    // Here you would typically send the data to a backend service
-    setFormData({
-      deviceType: '',
-      issueDescription: '',
-      name: '',
-      email: '',
-      phone: ''
+  const handleFileChange = (e) => {
+    const selectedFiles = Array.from(e.target.files);
+    const validFiles = selectedFiles.filter(file => {
+      const isValidType = file.type.startsWith('image/') || file.type.startsWith('video/');
+      const isValidSize = file.size <= 10 * 1024 * 1024; // 10MB limit
+      return isValidType && isValidSize;
     });
+
+    if (validFiles.length !== selectedFiles.length) {
+      setError('Some files were rejected. Please only upload images or videos under 10MB.');
+      return;
+    }
+
+    setFiles(prevFiles => [...prevFiles, ...validFiles]);
+    setError(null);
+
+    // Create preview URLs
+    validFiles.forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewUrls(prev => [...prev, reader.result]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeFile = (index) => {
+    setFiles(prevFiles => prevFiles.filter((_, i) => i !== index));
+    setPreviewUrls(prevUrls => prevUrls.filter((_, i) => i !== index));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('You must be logged in to submit a quote');
+      }
+
+      console.log('Submitting quote request...');
+      const response = await fetch('http://localhost:5000/api/quotes/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          deviceType: formData.deviceType,
+          issueDescription: formData.issueDescription
+        })
+      });
+
+      console.log('Response status:', response.status);
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Server returned non-JSON response');
+      }
+
+      const data = await response.json();
+      console.log('Response data:', data);
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to submit quote');
+      }
+
+      // Reset form
+      setFormData({
+        deviceType: '',
+        issueDescription: ''
+      });
+      setFiles([]);
+      setPreviewUrls([]);
+
+      // Show success message and redirect to dashboard
+      alert('Your quote request has been submitted! We will get back to you soon.');
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Error submitting quote:', error);
+      setError(error.message || 'An error occurred while submitting your quote');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -37,6 +115,13 @@ const GetQuotePage = () => {
       <div className="quote-form-container">
         <h2>Get Your Repair Quote</h2>
         <p>Tell us about your device and the issue you're experiencing.</p>
+        
+        {error && (
+          <div className="error-message">
+            {error}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="deviceType">Device Type:</label>
@@ -64,43 +149,49 @@ const GetQuotePage = () => {
             ></textarea>
           </div>
 
-          <h3>Your Contact Information</h3>
           <div className="form-group">
-            <label htmlFor="name">Your Name:</label>
+            <label htmlFor="files">Attach Images/Videos (Optional):</label>
             <input
-              type="text"
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              required
+              type="file"
+              id="files"
+              onChange={handleFileChange}
+              accept="image/*,video/*"
+              multiple
             />
+            <small>You can upload multiple files. Maximum size: 10MB per file.</small>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="email">Email:</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-            />
-          </div>
+          {previewUrls.length > 0 && (
+            <div className="preview-container">
+              <h3>Attached Files:</h3>
+              <div className="preview-grid">
+                {previewUrls.map((url, index) => (
+                  <div key={index} className="preview-item">
+                    {files[index].type.startsWith('image/') ? (
+                      <img src={url} alt={`Preview ${index + 1}`} />
+                    ) : (
+                      <video src={url} controls />
+                    )}
+                    <button
+                      type="button"
+                      className="remove-file"
+                      onClick={() => removeFile(index)}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
-          <div className="form-group">
-            <label htmlFor="phone">Phone (Optional):</label>
-            <input
-              type="tel"
-              id="phone"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-            />
-          </div>
-
-          <button type="submit" className="submit-button">Submit Request</button>
+          <button 
+            type="submit" 
+            className="submit-button"
+            disabled={loading}
+          >
+            {loading ? 'Submitting...' : 'Submit Request'}
+          </button>
         </form>
       </div>
     </div>

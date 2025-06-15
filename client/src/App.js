@@ -14,7 +14,7 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="App">
+    <div className="App">
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/contact" element={<GetQuotePage />} />
@@ -37,7 +37,7 @@ function App() {
               } 
             />
           </Routes>
-        </div>
+    </div>
       </Router>
     </AuthProvider>
   );
