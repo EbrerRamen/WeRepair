@@ -241,7 +241,7 @@ const Dashboard = () => {
     if (!selectedRequest) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/api/quotes/${selectedRequest._id}/accept`, {
+      const response = await fetch(`http://localhost:5000/api/quotes/${selectedRequest._id}/quote`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -252,14 +252,14 @@ const Dashboard = () => {
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.message || 'Failed to accept request');
+        throw new Error(data.message || 'Failed to send quote');
       }
 
       // Update the request status in the state
       setRepairRequests(prevRequests => 
         prevRequests.map(request => 
           request._id === selectedRequest._id 
-            ? { ...request, status: 'accepted', quote: quoteForm }
+            ? { ...request, status: 'quoted', quote: quoteForm }
             : request
         )
       );
@@ -272,10 +272,10 @@ const Dashboard = () => {
         notes: ''
       });
 
-      alert('Repair request accepted with quote successfully');
+      toast.success('Quote sent successfully');
     } catch (error) {
-      console.error('Error accepting request:', error);
-      alert(error.message || 'Failed to accept request');
+      console.error('Error sending quote:', error);
+      toast.error(error.message || 'Failed to send quote');
     }
   };
 
@@ -300,22 +300,32 @@ const Dashboard = () => {
   };
 
   const handleViewQuote = (request) => {
-    setSelectedQuote(request.quote);
+    setSelectedQuote(request);
     setShowQuoteDetails(true);
   };
 
   const handleAcceptQuote = async (quote) => {
     try {
-      const response = await axios.put(`/api/quotes/${quote._id}/accept`);
-      if (response.data.success) {
-        setShowAcceptConfirmation(false);
-        setQuoteToAccept(null);
-        fetchRepairRequests(); // Refresh the quotes list
-        toast.success('Quote accepted successfully');
+      const response = await fetch(`http://localhost:5000/api/quotes/${quote._id}/accept`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to accept quote');
       }
+
+      setShowAcceptConfirmation(false);
+      setQuoteToAccept(null);
+      fetchRepairRequests(); // Refresh the quotes list
+      toast.success('Quote accepted successfully');
     } catch (error) {
       console.error('Error accepting quote:', error);
-      toast.error(error.response?.data?.message || 'Error accepting quote');
+      toast.error(error.message || 'Error accepting quote');
     }
   };
 
@@ -634,7 +644,7 @@ const Dashboard = () => {
                             </button>
                           </>
                         )}
-                        {request.status === 'accepted' && request.quote && (
+                        {request.status === 'quoted' && request.quote && (
                           <button 
                             className="btn-primary view-quote-button"
                             onClick={() => handleViewQuote(request)}
@@ -686,7 +696,7 @@ const Dashboard = () => {
     <div className="modal">
       <div className="modal-content">
         <h2>Quote Details</h2>
-        {selectedQuote && (
+        {selectedQuote && selectedQuote.quote && (
           <div className="quote-details">
             <p><strong>Estimated Cost:</strong> ${selectedQuote.quote.estimatedCost}</p>
             <p><strong>Estimated Time:</strong> {selectedQuote.quote.estimatedTime}</p>
