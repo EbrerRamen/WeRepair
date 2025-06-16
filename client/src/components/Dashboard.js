@@ -847,8 +847,8 @@ const Dashboard = () => {
       {showQuoteForm && selectedRequest && (
         <div className="modal" onClick={() => setShowQuoteForm(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <button className="close-modal" onClick={() => setShowQuoteForm(false)}>×</button>
             <h2>Submit Quote for {selectedRequest.deviceName}</h2>
+            <button className="close-modal" onClick={() => setShowQuoteForm(false)}>×</button>
             <form onSubmit={handleQuoteSubmit} className="quote-form">
               <div className="form-group">
                 <label htmlFor="estimatedCost">Estimated Cost ($)</label>
@@ -902,8 +902,8 @@ const Dashboard = () => {
       {showRejectForm && selectedRequest && (
         <div className="modal" onClick={() => setShowRejectForm(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <button className="close-modal" onClick={() => setShowRejectForm(false)}>×</button>
             <h2>Reject Repair Request</h2>
+            <button className="close-modal" onClick={() => setShowRejectForm(false)}>×</button>
             <form onSubmit={handleRejectSubmit} className="quote-form">
               <div className="form-group">
                 <label htmlFor="reason">Reason for Rejection</label>
