@@ -389,7 +389,24 @@ router.put('/:id/accept', protect, async (req, res) => {
       });
     }
 
+    // Validate quote data
+    const { estimatedCost, estimatedTime, notes } = req.body;
+    if (!estimatedCost || !estimatedTime) {
+      return res.status(400).json({
+        success: false,
+        message: 'Estimated cost and time are required'
+      });
+    }
+
+    // Update quote with the submitted data
     quote.status = 'accepted';
+    quote.quote = {
+      estimatedCost,
+      estimatedTime,
+      notes: notes || '',
+      submittedBy: req.user._id,
+      submittedAt: Date.now()
+    };
     quote.updatedAt = Date.now();
     await quote.save();
 

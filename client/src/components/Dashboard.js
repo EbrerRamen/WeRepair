@@ -14,6 +14,13 @@ const Dashboard = () => {
   const [cancellingId, setCancellingId] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [users, setUsers] = useState([]);
+  const [showQuoteForm, setShowQuoteForm] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [quoteForm, setQuoteForm] = useState({
+    estimatedCost: '',
+    estimatedTime: '',
+    notes: ''
+  });
 
   useEffect(() => {
     if (user?.role === 'admin') {
@@ -227,17 +234,24 @@ const Dashboard = () => {
   };
 
   const handleAcceptRequest = async (requestId) => {
-    if (!window.confirm('Are you sure you want to accept this repair request?')) {
-      return;
-    }
+    const request = repairRequests.find(r => r._id === requestId);
+    setSelectedRequest(request);
+    setShowQuoteForm(true);
+  };
+
+  const handleQuoteSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!selectedRequest) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/api/quotes/${requestId}/accept`, {
+      const response = await fetch(`http://localhost:5000/api/quotes/${selectedRequest._id}/accept`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json'
-        }
+        },
+        body: JSON.stringify(quoteForm)
       });
 
       if (!response.ok) {
@@ -248,17 +262,33 @@ const Dashboard = () => {
       // Update the request status in the state
       setRepairRequests(prevRequests => 
         prevRequests.map(request => 
-          request._id === requestId 
-            ? { ...request, status: 'accepted' }
+          request._id === selectedRequest._id 
+            ? { ...request, status: 'accepted', quote: quoteForm }
             : request
         )
       );
 
-      alert('Repair request accepted successfully');
+      setShowQuoteForm(false);
+      setSelectedRequest(null);
+      setQuoteForm({
+        estimatedCost: '',
+        estimatedTime: '',
+        notes: ''
+      });
+
+      alert('Repair request accepted with quote successfully');
     } catch (error) {
       console.error('Error accepting request:', error);
       alert(error.message || 'Failed to accept request');
     }
+  };
+
+  const handleQuoteFormChange = (e) => {
+    const { name, value } = e.target;
+    setQuoteForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const handleImageClick = (imageUrl) => {
@@ -717,6 +747,61 @@ const Dashboard = () => {
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <button className="close-modal" onClick={closeModal}>×</button>
             <img src={selectedImage} alt="Full size" className="full-size-image" />
+          </div>
+        </div>
+      )}
+
+      {/* Quote Form Modal */}
+      {showQuoteForm && selectedRequest && (
+        <div className="modal" onClick={() => setShowQuoteForm(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <button className="close-modal" onClick={() => setShowQuoteForm(false)}>×</button>
+            <h2>Submit Quote for {selectedRequest.deviceName}</h2>
+            <form onSubmit={handleQuoteSubmit} className="quote-form">
+              <div className="form-group">
+                <label htmlFor="estimatedCost">Estimated Cost ($)</label>
+                <input
+                  type="number"
+                  id="estimatedCost"
+                  name="estimatedCost"
+                  value={quoteForm.estimatedCost}
+                  onChange={handleQuoteFormChange}
+                  required
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="estimatedTime">Estimated Time (days)</label>
+                <input
+                  type="number"
+                  id="estimatedTime"
+                  name="estimatedTime"
+                  value={quoteForm.estimatedTime}
+                  onChange={handleQuoteFormChange}
+                  required
+                  min="1"
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="notes">Additional Notes</label>
+                <textarea
+                  id="notes"
+                  name="notes"
+                  value={quoteForm.notes}
+                  onChange={handleQuoteFormChange}
+                  rows="4"
+                />
+              </div>
+              <div className="form-actions">
+                <button type="button" className="btn-secondary" onClick={() => setShowQuoteForm(false)}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn-primary">
+                  Submit Quote
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
