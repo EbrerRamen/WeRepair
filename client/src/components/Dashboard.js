@@ -494,6 +494,14 @@ const Dashboard = () => {
                               </button>
                             </>
                           )}
+                          {(request.status === 'quoted' || request.status === 'accepted') && request.quote && (
+                            <button 
+                              className="btn-primary view-quote-button"
+                              onClick={() => handleViewQuote(request)}
+                            >
+                              View Quote
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>
@@ -847,11 +855,11 @@ const Dashboard = () => {
       {showQuoteForm && selectedRequest && (
         <div className="modal" onClick={() => setShowQuoteForm(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <h2>Submit Quote for {selectedRequest.deviceName}</h2>
             <button className="close-modal" onClick={() => setShowQuoteForm(false)}>×</button>
+            <h2>Submit Quote for {selectedRequest.deviceName}</h2>
             <form onSubmit={handleQuoteSubmit} className="quote-form">
               <div className="form-group">
-                <label htmlFor="estimatedCost">Estimated Cost ($)</label>
+                <label htmlFor="estimatedCost">Estimated Cost (TK)</label>
                 <input
                   type="number"
                   id="estimatedCost"
