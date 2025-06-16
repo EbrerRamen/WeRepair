@@ -28,6 +28,24 @@ const quoteSchema = new mongoose.Schema({
     path: String,
     mimetype: String
   }],
+  quote: {
+    estimatedCost: Number,
+    estimatedTime: Number,
+    notes: String,
+    submittedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    submittedAt: Date
+  },
+  rejection: {
+    reason: String,
+    rejectedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    rejectedAt: Date
+  },
   createdAt: {
     type: Date,
     default: Date.now

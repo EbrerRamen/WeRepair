@@ -21,6 +21,12 @@ const Dashboard = () => {
     estimatedTime: '',
     notes: ''
   });
+  const [showRejectForm, setShowRejectForm] = useState(false);
+  const [rejectForm, setRejectForm] = useState({
+    reason: ''
+  });
+  const [showQuoteDetails, setShowQuoteDetails] = useState(false);
+  const [selectedQuote, setSelectedQuote] = useState(null);
 
   useEffect(() => {
     if (user?.role === 'admin') {
@@ -164,17 +170,24 @@ const Dashboard = () => {
   };
 
   const handleRejectRequest = async (requestId) => {
-    if (!window.confirm('Are you sure you want to reject this repair request?')) {
-      return;
-    }
+    const request = repairRequests.find(r => r._id === requestId);
+    setSelectedRequest(request);
+    setShowRejectForm(true);
+  };
+
+  const handleRejectSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!selectedRequest) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/api/quotes/${requestId}/reject`, {
+      const response = await fetch(`http://localhost:5000/api/quotes/${selectedRequest._id}/reject`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json'
-        }
+        },
+        body: JSON.stringify(rejectForm)
       });
 
       if (!response.ok) {
@@ -185,17 +198,31 @@ const Dashboard = () => {
       // Update the request status in the state
       setRepairRequests(prevRequests => 
         prevRequests.map(request => 
-          request._id === requestId 
-            ? { ...request, status: 'rejected' }
+          request._id === selectedRequest._id 
+            ? { ...request, status: 'rejected', rejectionReason: rejectForm.reason }
             : request
         )
       );
+
+      setShowRejectForm(false);
+      setSelectedRequest(null);
+      setRejectForm({
+        reason: ''
+      });
 
       alert('Repair request rejected successfully');
     } catch (error) {
       console.error('Error rejecting request:', error);
       alert(error.message || 'Failed to reject request');
     }
+  };
+
+  const handleRejectFormChange = (e) => {
+    const { name, value } = e.target;
+    setRejectForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const handleReviewRequest = async (requestId) => {
@@ -301,6 +328,11 @@ const Dashboard = () => {
 
   const handleEditRequest = (requestId) => {
     navigate(`/edit-request/${requestId}`);
+  };
+
+  const handleViewQuote = (request) => {
+    setSelectedQuote(request.quote);
+    setShowQuoteDetails(true);
   };
 
   const renderAdminDashboard = () => (
@@ -608,23 +640,40 @@ const Dashboard = () => {
                       <span className="date">
                         Submitted: {new Date(request.createdAt).toLocaleDateString()}
                       </span>
-                      {request.status === 'pending' && (
-                        <div className="request-actions">
+                      <div className="request-actions">
+                        {request.status === 'pending' && (
+                          <>
+                            <button 
+                              className="btn-secondary edit-button"
+                              onClick={() => handleEditRequest(request._id)}
+                            >
+                              Edit Request
+                            </button>
+                            <button 
+                              className="btn-secondary cancel-button"
+                              onClick={() => handleCancelRequest(request._id)}
+                              disabled={cancellingId === request._id}
+                            >
+                              {cancellingId === request._id ? 'Cancelling...' : 'Cancel Request'}
+                            </button>
+                          </>
+                        )}
+                        {request.status === 'accepted' && request.quote && (
                           <button 
-                            className="btn-secondary edit-button"
-                            onClick={() => handleEditRequest(request._id)}
+                            className="btn-primary view-quote-button"
+                            onClick={() => handleViewQuote(request)}
                           >
-                            Edit Request
+                            View Quote
                           </button>
-                          <button 
-                            className="btn-secondary cancel-button"
-                            onClick={() => handleCancelRequest(request._id)}
-                            disabled={cancellingId === request._id}
-                          >
-                            {cancellingId === request._id ? 'Cancelling...' : 'Cancel Request'}
-                          </button>
-                        </div>
-                      )}
+                        )}
+                        {request.status === 'rejected' && request.rejection && (
+                          <div className="rejection-info">
+                            <p className="rejection-reason">
+                              <strong>Rejection Reason:</strong> {request.rejection.reason}
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -802,6 +851,78 @@ const Dashboard = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Reject Form Modal */}
+      {showRejectForm && selectedRequest && (
+        <div className="modal" onClick={() => setShowRejectForm(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <button className="close-modal" onClick={() => setShowRejectForm(false)}>×</button>
+            <h2>Reject Repair Request</h2>
+            <form onSubmit={handleRejectSubmit} className="quote-form">
+              <div className="form-group">
+                <label htmlFor="reason">Reason for Rejection</label>
+                <textarea
+                  id="reason"
+                  name="reason"
+                  value={rejectForm.reason}
+                  onChange={handleRejectFormChange}
+                  rows="4"
+                  required
+                  placeholder="Please provide a detailed reason for rejecting this repair request..."
+                />
+              </div>
+              <div className="form-actions">
+                <button type="button" className="btn-secondary" onClick={() => setShowRejectForm(false)}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn-secondary reject-button">
+                  Confirm Rejection
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Quote Details Modal */}
+      {showQuoteDetails && selectedQuote && (
+        <div className="modal" onClick={() => setShowQuoteDetails(false)}>
+          <div className="modal-content quote-details" onClick={e => e.stopPropagation()}>
+            <button className="close-modal" onClick={() => setShowQuoteDetails(false)}>×</button>
+            <h2>Repair Quote Details</h2>
+            <div className="quote-info">
+              <div className="quote-section">
+                <h3>Estimated Cost</h3>
+                <p className="quote-amount">${selectedQuote.estimatedCost}</p>
+              </div>
+              <div className="quote-section">
+                <h3>Estimated Time</h3>
+                <p className="quote-time">{selectedQuote.estimatedTime} days</p>
+              </div>
+              {selectedQuote.notes && (
+                <div className="quote-section">
+                  <h3>Additional Notes</h3>
+                  <p className="quote-notes">{selectedQuote.notes}</p>
+                </div>
+              )}
+              <div className="quote-section">
+                <h3>Quote Submitted</h3>
+                <p className="quote-date">
+                  {new Date(selectedQuote.submittedAt).toLocaleDateString()}
+                </p>
+              </div>
+            </div>
+            <div className="form-actions">
+              <button 
+                className="btn-primary"
+                onClick={() => setShowQuoteDetails(false)}
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

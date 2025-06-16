@@ -624,4 +624,95 @@
 .close-modal:hover {
   color: #e74c3c;
   transform: rotate(90deg);
+}
+
+/* Reject Form Specific Styles */
+.reject-button {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%) !important;
+  box-shadow: 0 4px 15px rgba(231, 76, 60, 0.2) !important;
+}
+
+.reject-button:hover {
+  background: linear-gradient(135deg, #c0392b 0%, #a93226 100%) !important;
+  box-shadow: 0 6px 20px rgba(231, 76, 60, 0.3) !important;
+}
+
+/* Add red color for reject form title */
+.showRejectForm .modal-content h2 {
+  color: #e74c3c;
+}
+
+/* Quote Details Modal */
+.quote-details {
+  max-width: 600px;
+}
+
+.quote-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+.quote-section {
+  background: #f8f9fa;
+  padding: 1.2rem;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.quote-section h3 {
+  color: #2c3e50;
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.quote-amount {
+  font-size: 1.8rem;
+  color: #27ae60;
+  font-weight: 600;
+}
+
+.quote-time {
+  font-size: 1.4rem;
+  color: #3498db;
+  font-weight: 500;
+}
+
+.quote-notes {
+  color: #2c3e50;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.quote-date {
+  color: #7f8c8d;
+  font-size: 1.1rem;
+}
+
+/* Rejection Info */
+.rejection-info {
+  background: #fff5f5;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #feb2b2;
+  margin-top: 1rem;
+}
+
+.rejection-reason {
+  color: #e53e3e;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* View Quote Button */
+.view-quote-button {
+  background: linear-gradient(135deg, #27ae60 0%, #219a52 100%) !important;
+  box-shadow: 0 4px 15px rgba(39, 174, 96, 0.2) !important;
+}
+
+.view-quote-button:hover {
+  background: linear-gradient(135deg, #219a52 0%, #1e8449 100%) !important;
+  box-shadow: 0 6px 20px rgba(39, 174, 96, 0.3) !important;
 } 

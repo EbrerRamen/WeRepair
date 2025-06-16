@@ -99,7 +99,10 @@ router.post('/submit', protect, upload.array('files', 5), async (req, res) => {
 router.get('/my-quotes', protect, async (req, res) => {
   try {
     const quotes = await Quote.find({ userId: req.user._id })
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .populate('userId', 'name email')
+      .populate('quote.submittedBy', 'name')
+      .populate('rejection.rejectedBy', 'name');
     
     res.json({
       success: true,
@@ -127,7 +130,9 @@ router.get('/all', protect, async (req, res) => {
 
     const quotes = await Quote.find()
       .sort({ createdAt: -1 })
-      .populate('userId', 'name email');
+      .populate('userId', 'name email')
+      .populate('quote.submittedBy', 'name')
+      .populate('rejection.rejectedBy', 'name');
     
     res.json({
       success: true,
@@ -148,7 +153,10 @@ router.get('/:id', protect, async (req, res) => {
     const quote = await Quote.findOne({
       _id: req.params.id,
       userId: req.user._id
-    });
+    })
+    .populate('userId', 'name email')
+    .populate('quote.submittedBy', 'name')
+    .populate('rejection.rejectedBy', 'name');
 
     if (!quote) {
       return res.status(404).json({
@@ -343,7 +351,22 @@ router.put('/:id/reject', protect, async (req, res) => {
       });
     }
 
+    // Validate rejection reason
+    const { reason } = req.body;
+    if (!reason || reason.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Rejection reason is required'
+      });
+    }
+
+    // Update quote with rejection data
     quote.status = 'rejected';
+    quote.rejection = {
+      reason: reason.trim(),
+      rejectedBy: req.user._id,
+      rejectedAt: Date.now()
+    };
     quote.updatedAt = Date.now();
     await quote.save();
 
