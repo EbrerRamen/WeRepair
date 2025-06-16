@@ -3,6 +3,8 @@ import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import './Dashboard.css';
+import axios from 'axios';
+import { toast } from 'react-hot-toast';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
@@ -27,6 +29,8 @@ const Dashboard = () => {
   });
   const [showQuoteDetails, setShowQuoteDetails] = useState(false);
   const [selectedQuote, setSelectedQuote] = useState(null);
+  const [showAcceptConfirmation, setShowAcceptConfirmation] = useState(false);
+  const [quoteToAccept, setQuoteToAccept] = useState(null);
 
   useEffect(() => {
     if (user?.role === 'admin') {
@@ -225,41 +229,6 @@ const Dashboard = () => {
     }));
   };
 
-  const handleReviewRequest = async (requestId) => {
-    if (!window.confirm('Are you sure you want to review this repair request?')) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`http://localhost:5000/api/quotes/${requestId}/review`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Failed to review request');
-      }
-
-      // Update the request status in the state
-      setRepairRequests(prevRequests => 
-        prevRequests.map(request => 
-          request._id === requestId 
-            ? { ...request, status: 'reviewed' }
-            : request
-        )
-      );
-
-      alert('Repair request reviewed successfully');
-    } catch (error) {
-      console.error('Error reviewing request:', error);
-      alert(error.message || 'Failed to review request');
-    }
-  };
-
   const handleAcceptRequest = async (requestId) => {
     const request = repairRequests.find(r => r._id === requestId);
     setSelectedRequest(request);
@@ -333,6 +302,21 @@ const Dashboard = () => {
   const handleViewQuote = (request) => {
     setSelectedQuote(request.quote);
     setShowQuoteDetails(true);
+  };
+
+  const handleAcceptQuote = async (quote) => {
+    try {
+      const response = await axios.put(`/api/quotes/${quote._id}/accept`);
+      if (response.data.success) {
+        setShowAcceptConfirmation(false);
+        setQuoteToAccept(null);
+        fetchRepairRequests(); // Refresh the quotes list
+        toast.success('Quote accepted successfully');
+      }
+    } catch (error) {
+      console.error('Error accepting quote:', error);
+      toast.error(error.response?.data?.message || 'Error accepting quote');
+    }
   };
 
   const renderAdminDashboard = () => (
@@ -485,20 +469,12 @@ const Dashboard = () => {
                       {user?.role === 'admin' && (
                         <div className="request-actions">
                           {request.status === 'pending' && (
-                            <button 
-                              className="btn-secondary review-button"
-                              onClick={() => handleReviewRequest(request._id)}
-                            >
-                              Review Request
-                            </button>
-                          )}
-                          {request.status === 'reviewed' && (
                             <>
                               <button 
                                 className="btn-primary accept-button"
                                 onClick={() => handleAcceptRequest(request._id)}
                               >
-                                Accept Request
+                                Send Quote
                               </button>
                               <button 
                                 className="btn-secondary reject-button"
@@ -706,6 +682,63 @@ const Dashboard = () => {
     </div>
   );
 
+  const QuoteDetailsModal = () => (
+    <div className="modal">
+      <div className="modal-content">
+        <h2>Quote Details</h2>
+        {selectedQuote && (
+          <div className="quote-details">
+            <p><strong>Estimated Cost:</strong> ${selectedQuote.quote.estimatedCost}</p>
+            <p><strong>Estimated Time:</strong> {selectedQuote.quote.estimatedTime}</p>
+            {selectedQuote.quote.notes && (
+              <p><strong>Additional Notes:</strong> {selectedQuote.quote.notes}</p>
+            )}
+            <p><strong>Submitted On:</strong> {new Date(selectedQuote.quote.submittedAt).toLocaleDateString()}</p>
+            
+            {selectedQuote.status === 'quoted' && (
+              <button 
+                className="accept-quote-btn"
+                onClick={() => {
+                  setQuoteToAccept(selectedQuote);
+                  setShowAcceptConfirmation(true);
+                }}
+              >
+                Accept Quote
+              </button>
+            )}
+          </div>
+        )}
+        <button className="close-btn" onClick={() => setShowQuoteDetails(false)}>Close</button>
+      </div>
+    </div>
+  );
+
+  const AcceptConfirmationModal = () => (
+    <div className="modal">
+      <div className="modal-content">
+        <h2>Accept Quote</h2>
+        <p>Are you sure you want to accept this quote?</p>
+        <div className="modal-actions">
+          <button 
+            className="confirm-btn"
+            onClick={() => handleAcceptQuote(quoteToAccept)}
+          >
+            Yes, Accept
+          </button>
+          <button 
+            className="cancel-btn"
+            onClick={() => {
+              setShowAcceptConfirmation(false);
+              setQuoteToAccept(null);
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="dashboard-page">
       <div className="dashboard-container">
@@ -887,45 +920,8 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Quote Details Modal */}
-      {showQuoteDetails && selectedQuote && (
-        <div className="modal" onClick={() => setShowQuoteDetails(false)}>
-          <div className="modal-content quote-details" onClick={e => e.stopPropagation()}>
-            <button className="close-modal" onClick={() => setShowQuoteDetails(false)}>×</button>
-            <h2>Repair Quote Details</h2>
-            <div className="quote-info">
-              <div className="quote-section">
-                <h3>Estimated Cost</h3>
-                <p className="quote-amount">${selectedQuote.estimatedCost}</p>
-              </div>
-              <div className="quote-section">
-                <h3>Estimated Time</h3>
-                <p className="quote-time">{selectedQuote.estimatedTime} days</p>
-              </div>
-              {selectedQuote.notes && (
-                <div className="quote-section">
-                  <h3>Additional Notes</h3>
-                  <p className="quote-notes">{selectedQuote.notes}</p>
-                </div>
-              )}
-              <div className="quote-section">
-                <h3>Quote Submitted</h3>
-                <p className="quote-date">
-                  {new Date(selectedQuote.submittedAt).toLocaleDateString()}
-                </p>
-              </div>
-            </div>
-            <div className="form-actions">
-              <button 
-                className="btn-primary"
-                onClick={() => setShowQuoteDetails(false)}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {showQuoteDetails && <QuoteDetailsModal />}
+      {showAcceptConfirmation && <AcceptConfirmationModal />}
     </div>
   );
 };

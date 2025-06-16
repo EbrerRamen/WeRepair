@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { Toaster } from 'react-hot-toast';
 import ProtectedRoute from './components/ProtectedRoute';
 import HomePage from './components/HomePage';
 import GetQuotePage from './components/GetQuotePage';
@@ -16,7 +17,8 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-    <div className="App">
+        <Toaster position="top-right" />
+        <div className="App">
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/contact" element={<GetQuotePage />} />
@@ -45,7 +47,7 @@ function App() {
               </ProtectedRoute>
             } />
           </Routes>
-    </div>
+        </div>
       </Router>
     </AuthProvider>
   );
