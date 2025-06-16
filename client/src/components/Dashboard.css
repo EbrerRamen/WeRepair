@@ -548,6 +548,7 @@
   font-size: 1rem;
   transition: all 0.3s ease;
   background-color: #ffffff;
+  color: #333;
 }
 
 .quote-form input:focus,
