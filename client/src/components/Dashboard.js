@@ -321,7 +321,8 @@ const Dashboard = () => {
 
       setShowAcceptConfirmation(false);
       setQuoteToAccept(null);
-      fetchRepairRequests(); // Refresh the quotes list
+      setShowQuoteDetails(false);
+      fetchRepairRequests();
       toast.success('Quote accepted successfully');
     } catch (error) {
       console.error('Error accepting quote:', error);
