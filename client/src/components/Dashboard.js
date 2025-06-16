@@ -487,7 +487,7 @@ const Dashboard = () => {
                                 Send Quote
                               </button>
                               <button 
-                                className="btn-secondary reject-button"
+                                className="btn-secondary"
                                 onClick={() => handleRejectRequest(request._id)}
                               >
                                 Reject Request
