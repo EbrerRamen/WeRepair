@@ -184,7 +184,10 @@ router.delete('/:id', protect, async (req, res) => {
     const quote = await Quote.findOne({
       _id: req.params.id,
       userId: req.user._id,
-      status: 'pending' // Only allow cancellation of pending requests
+      $or: [ // Allow cancellation if status is pending or quoted
+        { status: 'pending' },
+        { status: 'quoted' }
+      ]
     });
 
     if (!quote) {
