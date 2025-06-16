@@ -706,14 +706,14 @@ const Dashboard = () => {
         <h2>Quote Details</h2>
         {selectedQuote && selectedQuote.quote && (
           <div className="quote-details">
-            <p><strong>Estimated Cost:</strong> ${selectedQuote.quote.estimatedCost}</p>
+            <p><strong>Estimated Cost:</strong> TK{selectedQuote.quote.estimatedCost}</p>
             <p><strong>Estimated Time:</strong> {selectedQuote.quote.estimatedTime}</p>
             {selectedQuote.quote.notes && (
               <p><strong>Additional Notes:</strong> {selectedQuote.quote.notes}</p>
             )}
             <p><strong>Submitted On:</strong> {new Date(selectedQuote.quote.submittedAt).toLocaleDateString()}</p>
             
-            {selectedQuote.status === 'quoted' && (
+            {selectedQuote.status === 'quoted' && user?.role !== 'admin' && (
               <button 
                 className="accept-quote-btn"
                 onClick={() => {
@@ -726,7 +726,7 @@ const Dashboard = () => {
             )}
           </div>
         )}
-        <button className="close-btn" onClick={() => setShowQuoteDetails(false)}>Close</button>
+        <button className="close-modal" onClick={() => setShowQuoteDetails(false)}>×</button>
       </div>
     </div>
   );
