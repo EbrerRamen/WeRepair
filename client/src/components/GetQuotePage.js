@@ -153,15 +153,19 @@ const GetQuotePage = () => {
 
           <div className="form-group">
             <label htmlFor="deviceType">Device Type:</label>
-            <input
-              type="text"
+            <select
               id="deviceType"
               name="deviceType"
               value={formData.deviceType}
               onChange={handleChange}
-              placeholder="e.g., Gaming Mouse, Mechanical Keyboard, Headset"
               required
-            />
+            >
+              <option value="">Select device type</option>
+              <option value="Mouse">Mouse</option>
+              <option value="Keyboard">Keyboard</option>
+              <option value="Headphone">Headphone</option>
+              <option value="Controller">Controller</option>
+            </select>
           </div>
 
           <div className="form-group">
