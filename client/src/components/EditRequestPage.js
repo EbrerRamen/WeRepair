@@ -10,7 +10,11 @@ const EditRequestPage = () => {
   const [formData, setFormData] = useState({
     deviceName: '',
     deviceType: '',
-    issueDescription: ''
+    issueDescription: '',
+    deliveryMethod: 'dropoff', // 'dropoff' or 'pickup'
+    address: '',
+    city: '',
+    postalCode: ''
   });
   const [files, setFiles] = useState([]);
   const [previewUrls, setPreviewUrls] = useState([]);
@@ -48,7 +52,11 @@ const EditRequestPage = () => {
         setFormData({
           deviceName: requestData.deviceName || '',
           deviceType: requestData.deviceType || '',
-          issueDescription: requestData.issueDescription || ''
+          issueDescription: requestData.issueDescription || '',
+          deliveryMethod: requestData.deliveryMethod || 'dropoff',
+          address: requestData.address || '',
+          city: requestData.city || '',
+          postalCode: requestData.postalCode || ''
         });
         
         if (requestData.files) {
@@ -137,6 +145,12 @@ const EditRequestPage = () => {
       formDataToSend.append('deviceName', formData.deviceName);
       formDataToSend.append('deviceType', formData.deviceType);
       formDataToSend.append('issueDescription', formData.issueDescription);
+      formDataToSend.append('deliveryMethod', formData.deliveryMethod);
+      if (formData.deliveryMethod === 'pickup') {
+        formDataToSend.append('address', formData.address);
+        formDataToSend.append('city', formData.city);
+        formDataToSend.append('postalCode', formData.postalCode);
+      }
       
       // Append each new file to the FormData
       files.forEach((file, index) => {
@@ -228,6 +242,74 @@ const EditRequestPage = () => {
               required
             ></textarea>
           </div>
+
+          {/* Delivery Method */}
+          <div className="form-group delivery-method-group">
+            <label>How will you deliver your device?</label>
+            <div className="delivery-method-options">
+              <label>
+                <input
+                  type="radio"
+                  name="deliveryMethod"
+                  value="dropoff"
+                  checked={formData.deliveryMethod === 'dropoff'}
+                  onChange={handleChange}
+                />
+                I will drop off my device at the shop
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="deliveryMethod"
+                  value="pickup"
+                  checked={formData.deliveryMethod === 'pickup'}
+                  onChange={handleChange}
+                />
+                Send a receiver to pick up my device
+              </label>
+            </div>
+          </div>
+
+          {formData.deliveryMethod === 'pickup' && (
+            <div className="form-group address-fields">
+              <div className="form-group">
+                <label htmlFor="address">Pickup Address:</label>
+                <input
+                  type="text"
+                  id="address"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  placeholder="Enter your address"
+                  required={formData.deliveryMethod === 'pickup'}
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="city">City:</label>
+                <input
+                  type="text"
+                  id="city"
+                  name="city"
+                  value={formData.city}
+                  onChange={handleChange}
+                  placeholder="Enter your city"
+                  required={formData.deliveryMethod === 'pickup'}
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="postalCode">Postal Code:</label>
+                <input
+                  type="text"
+                  id="postalCode"
+                  name="postalCode"
+                  value={formData.postalCode}
+                  onChange={handleChange}
+                  placeholder="Enter your postal code"
+                  required={formData.deliveryMethod === 'pickup'}
+                />
+              </div>
+            </div>
+          )}
 
           {existingFiles.length > 0 && (
             <div className="preview-container">
