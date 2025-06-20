@@ -35,6 +35,9 @@ const Dashboard = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchUser, setSearchUser] = useState('');
   const [searchDevice, setSearchDevice] = useState('');
+  const [notifications, setNotifications] = useState([]);
+  const [notifLoading, setNotifLoading] = useState(false);
+  const [notifError, setNotifError] = useState(null);
 
   useEffect(() => {
     if (user?.role === 'admin') {
@@ -42,9 +45,13 @@ const Dashboard = () => {
         fetchUsers();
       } else if (activeTab === 'requests') {
         fetchRepairRequests();
+      } else if (activeTab === 'notifications') {
+        fetchNotifications();
       }
     } else if (activeTab === 'repairs') {
       fetchRepairRequests();
+    } else if (activeTab === 'notifications') {
+      fetchNotifications();
     }
   }, [activeTab, user?.role]);
 
@@ -95,6 +102,22 @@ const Dashboard = () => {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchNotifications = async () => {
+    setNotifLoading(true);
+    setNotifError(null);
+    try {
+      const res = await axios.get('http://localhost:5000/api/quotes/notifications', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      setNotifications(res.data);
+    } catch (err) {
+      setNotifError(err.message || 'Failed to fetch notifications');
+      setNotifications([]);
+    } finally {
+      setNotifLoading(false);
     }
   };
 
@@ -349,6 +372,17 @@ const Dashboard = () => {
         : (request.userId?.name || '').toLowerCase().includes(searchUser.toLowerCase());
     return deviceTypeMatch && statusMatch && deviceNameMatch && userNameMatch;
   });
+
+  const markAsRead = async (notifId) => {
+    try {
+      await axios.patch(`/api/quotes/notifications/${notifId}/read`, {}, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      setNotifications((prev) => prev.map(n => n._id === notifId ? { ...n, read: true } : n));
+    } catch {}
+  };
+
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   const renderAdminDashboard = () => (
     <div className="dashboard-content">
@@ -627,6 +661,31 @@ const Dashboard = () => {
           </div>
         </motion.div>
       )}
+
+      {activeTab === 'notifications' && (
+        <div className="dashboard-card">
+          <h2>Notifications</h2>
+          {notifLoading ? (
+            <div className="notif-loading">Loading...</div>
+          ) : notifError ? (
+            <div className="notif-error">{notifError}</div>
+          ) : notifications.length === 0 ? (
+            <div className="notif-empty">No notifications</div>
+          ) : (
+            <div className="notif-list">
+              {notifications.map(notif => (
+                <div key={notif._id} className={`notif-item${notif.read ? '' : ' unread'}`}>
+                  <span className="notif-message">{notif.message}</span>
+                  <span className="notif-date">{new Date(notif.createdAt).toLocaleString()}</span>
+                  {!notif.read && (
+                    <button className="mark-read-btn" onClick={() => markAsRead(notif._id)}>Mark as read</button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 
@@ -862,6 +921,31 @@ const Dashboard = () => {
           </div>
         </motion.div>
       )}
+
+      {activeTab === 'notifications' && (
+        <div className="dashboard-card">
+          <h2>Notifications</h2>
+          {notifLoading ? (
+            <div className="notif-loading">Loading...</div>
+          ) : notifError ? (
+            <div className="notif-error">{notifError}</div>
+          ) : notifications.length === 0 ? (
+            <div className="notif-empty">No notifications</div>
+          ) : (
+            <div className="notif-list">
+              {notifications.map(notif => (
+                <div key={notif._id} className={`notif-item${notif.read ? '' : ' unread'}`}>
+                  <span className="notif-message">{notif.message}</span>
+                  <span className="notif-date">{new Date(notif.createdAt).toLocaleString()}</span>
+                  {!notif.read && (
+                    <button className="mark-read-btn" onClick={() => markAsRead(notif._id)}>Mark as read</button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 
@@ -978,6 +1062,13 @@ const Dashboard = () => {
               >
                 Quotes
               </button>
+              <button 
+                className={`tab ${activeTab === 'notifications' ? 'active' : ''}`}
+                onClick={() => setActiveTab('notifications')}
+              >
+                Notifications
+                {unreadCount > 0 && <span className="notif-badge">{unreadCount}</span>}
+              </button>
             </>
           ) : (
             <>
@@ -998,6 +1089,13 @@ const Dashboard = () => {
                 onClick={() => setActiveTab('profile')}
               >
                 Profile
+              </button>
+              <button 
+                className={`tab ${activeTab === 'notifications' ? 'active' : ''}`}
+                onClick={() => setActiveTab('notifications')}
+              >
+                Notifications
+                {unreadCount > 0 && <span className="notif-badge">{unreadCount}</span>}
               </button>
             </>
           )}

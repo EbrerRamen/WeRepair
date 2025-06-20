@@ -51,35 +51,43 @@
   color: #dc3545;
 }
 
-.notification-bell-wrapper {
+.notification-section-wrapper {
   position: relative;
   margin-right: 1rem;
 }
 
-.notification-bell {
+.notification-section {
   background: none;
   border: none;
   cursor: pointer;
-  position: relative;
-  padding: 0.2rem 0.5rem;
   color: #333;
-  transition: color 0.2s;
-  outline: none;
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 0.2rem 0.7rem;
+  border-radius: 6px;
+  transition: background 0.18s, color 0.18s;
+  position: relative;
 }
 
-.notification-bell:hover {
+.notification-section:hover {
+  background: #f0f4ff;
   color: #007bff;
 }
 
-.notif-dot {
-  position: absolute;
-  top: 2px;
-  right: 6px;
-  width: 10px;
-  height: 10px;
+.notif-badge {
+  display: inline-block;
+  min-width: 20px;
+  height: 20px;
   background: #ff1744;
-  border-radius: 50%;
-  border: 2px solid #fff;
+  color: #fff;
+  font-size: 0.92rem;
+  font-weight: 700;
+  border-radius: 12px;
+  padding: 0 7px;
+  margin-left: 8px;
+  vertical-align: middle;
+  text-align: center;
+  line-height: 20px;
   box-shadow: 0 0 2px #ff1744;
 }
 

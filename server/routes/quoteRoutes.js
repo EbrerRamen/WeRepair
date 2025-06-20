@@ -6,6 +6,7 @@ const Quote = require('../models/Quote');
 const { protect } = require('../middleware/auth');
 const fs = require('fs');
 const Notification = require('../models/Notification');
+const User = require('../models/User');
 
 // Configure multer for file upload
 const storage = multer.diskStorage({
@@ -84,6 +85,17 @@ router.post('/submit', protect, upload.array('files', 5), async (req, res) => {
 
     await quote.save();
     console.log('Quote saved successfully:', quote);
+
+    // Notify all admins
+    const admins = await User.find({ role: 'admin' });
+    for (const admin of admins) {
+      await Notification.create({
+        userId: admin._id,
+        message: `New repair request submitted by ${req.user.name} for ${deviceName}.`,
+        type: 'status',
+        relatedRequestId: quote._id
+      });
+    }
 
     res.status(201).json({
       success: true,
@@ -218,6 +230,14 @@ router.delete('/:id', protect, async (req, res) => {
     res.json({
       success: true,
       message: 'Quote request cancelled successfully'
+    });
+
+    // Create notification
+    await Notification.create({
+      userId: quote.userId,
+      message: `Your repair request for ${quote.deviceName} was cancelled.`,
+      type: 'status',
+      relatedRequestId: quote._id
     });
   } catch (error) {
     console.error('Error cancelling quote:', error);
@@ -406,6 +426,14 @@ router.put('/:id/quote', protect, async (req, res) => {
       message: 'Quote sent successfully',
       quote
     });
+
+    // Create notification
+    await Notification.create({
+      userId: quote.userId,
+      message: `A quote has been sent for your repair request: ${quote.deviceName}.`,
+      type: 'status',
+      relatedRequestId: quote._id
+    });
   } catch (error) {
     console.error('Error sending quote:', error);
     res.status(500).json({
@@ -447,6 +475,14 @@ router.put('/:id/accept', protect, async (req, res) => {
       success: true,
       message: 'Quote accepted successfully',
       quote
+    });
+
+    // Create notification
+    await Notification.create({
+      userId: quote.userId,
+      message: `Your repair request for ${quote.deviceName} was accepted!`,
+      type: 'status',
+      relatedRequestId: quote._id
     });
   } catch (error) {
     console.error('Error accepting quote:', error);
@@ -508,6 +544,14 @@ router.put('/:id/reject', protect, async (req, res) => {
       success: true,
       message: 'Quote rejected successfully',
       quote
+    });
+
+    // Create notification
+    await Notification.create({
+      userId: quote.userId,
+      message: `Your repair request for ${quote.deviceName} was rejected. Reason: ${reason.trim()}`,
+      type: 'status',
+      relatedRequestId: quote._id
     });
   } catch (error) {
     console.error('Error rejecting quote:', error);

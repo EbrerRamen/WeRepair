@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './Navbar.css';
 import axios from 'axios';
-import { FaBell } from 'react-icons/fa';
 
 const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth();
@@ -14,9 +13,14 @@ const Navbar = () => {
   const dropdownRef = useRef(null);
 
   useEffect(() => {
-    if (isAuthenticated && showDropdown) {
+    if (isAuthenticated) {
       fetchNotifications();
+      const interval = setInterval(fetchNotifications, 30000); // Poll every 30s
+      return () => clearInterval(interval);
     }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
     // Close dropdown on outside click
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -27,7 +31,7 @@ const Navbar = () => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isAuthenticated, showDropdown]);
+  }, []);
 
   const fetchNotifications = async () => {
     setLoading(true);
@@ -67,11 +71,11 @@ const Navbar = () => {
         <div className="nav-links">
           {isAuthenticated ? (
             <>
-              <div className="notification-bell-wrapper" ref={dropdownRef}>
-                <button className="notification-bell" onClick={() => setShowDropdown((s) => !s)}>
-                  <FaBell size={20} />
-                  {notifications.some(n => !n.read) && (
-                    <span className="notif-dot" />
+              <div className="notification-section-wrapper" ref={dropdownRef}>
+                <button className="notification-section" onClick={() => setShowDropdown((s) => !s)}>
+                  Notifications
+                  {notifications.filter(n => !n.read).length > 0 && (
+                    <span className="notif-badge">{notifications.filter(n => !n.read).length}</span>
                   )}
                 </button>
                 {showDropdown && (

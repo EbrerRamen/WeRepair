@@ -18,6 +18,21 @@ const quoteSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  deliveryMethod: {
+    type: String,
+    enum: ['dropoff', 'pickup'],
+    default: 'dropoff',
+    required: true
+  },
+  address: {
+    type: String
+  },
+  city: {
+    type: String
+  },
+  postalCode: {
+    type: String
+  },
   status: {
     type: String,
     enum: ['pending', 'quoted', 'accepted', 'rejected'],
