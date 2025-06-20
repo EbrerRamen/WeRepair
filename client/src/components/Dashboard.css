@@ -181,27 +181,29 @@
 }
 
 .repair-request-card {
-  background: white;
-  border-radius: 8px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease;
-  width: 100%;
-  box-sizing: border-box;
+  background: #f9f9fb;
+  border-radius: 12px;
+  padding: 1.7rem 2rem 1.2rem 2rem;
+  box-shadow: 0 4px 18px rgba(44, 62, 80, 0.08), 0 1.5px 4px rgba(44, 62, 80, 0.06);
+  border-left: 6px solid #bdbdbd;
+  border-top: 1.5px solid #e0e0e0;
+  border-bottom: 1.5px solid #e0e0e0;
+  margin-bottom: 1.5rem;
+  transition: box-shadow 0.2s, border-color 0.2s, transform 0.15s;
+  position: relative;
 }
 
 .repair-request-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 32px rgba(44, 62, 80, 0.13), 0 2px 8px rgba(44, 62, 80, 0.09);
+  transform: translateY(-2px) scale(1.012);
+  border-left-color: var(--primary-color);
 }
 
 .repair-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+  align-items: flex-start;
+  margin-bottom: 0.7rem;
 }
 
 .repair-header h3 {
@@ -222,10 +224,10 @@
 }
 
 .issue-description {
-  color: var(--text-color);
-  margin-bottom: 1rem;
+  color: #333;
+  margin-bottom: 0.7rem;
+  font-size: 1.08rem;
   line-height: 1.5;
-  word-wrap: break-word;
 }
 
 .repair-footer {
@@ -397,13 +399,15 @@
 
 .device-info h3 {
   margin: 0;
-  color: var(--text-color);
-  font-size: 1.2rem;
+  color: var(--primary-color);
+  font-size: 1.25rem;
+  margin-bottom: 0.2rem;
 }
 
 .device-type {
-  color: #666;
-  font-size: 0.9rem;
+  color: #757575;
+  font-size: 0.98rem;
+  font-weight: 500;
 }
 
 /* Image Modal Styles */
@@ -793,4 +797,31 @@
 .quote-details strong {
   color: #333;
   margin-right: 10px;
+}
+
+.delivery-method-info {
+  background: #f8f9fa;
+  color: #1a237e;
+  border-left: 4px solid var(--primary-color);
+  padding: 0.7rem 1rem;
+  border-radius: 6px;
+  margin: 0.7rem 0 0.3rem 0;
+  font-weight: 500;
+  font-size: 1.05rem;
+}
+
+.pickup-address-info {
+  background: #fffde7;
+  color: #795548;
+  border-left: 4px solid #ffd600;
+  padding: 0.7rem 1rem 0.7rem 1.2rem;
+  border-radius: 6px;
+  margin-bottom: 0.7rem;
+  margin-top: 0.2rem;
+  font-size: 0.98rem;
+}
+
+.pickup-address-info p {
+  margin: 0.2rem 0;
+  font-size: 0.98rem;
 } 
