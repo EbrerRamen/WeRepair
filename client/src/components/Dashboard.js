@@ -443,6 +443,16 @@ const Dashboard = () => {
                       </span>
                     </div>
                     <p className="issue-description">{request.issueDescription}</p>
+                    <p className="delivery-method-info">
+                      <strong>Delivery Method:</strong> {request.deliveryMethod === 'pickup' ? 'Pickup (Receiver will come)' : 'Dropoff at Shop'}
+                    </p>
+                    {request.deliveryMethod === 'pickup' && (
+                      <div className="pickup-address-info">
+                        <p><strong>Pickup Address:</strong> {request.address || 'N/A'}</p>
+                        <p><strong>City:</strong> {request.city || 'N/A'}</p>
+                        <p><strong>Postal Code:</strong> {request.postalCode || 'N/A'}</p>
+                      </div>
+                    )}
                     
                     {request.files && request.files.length > 0 && (
                       <div className="repair-images">
@@ -601,6 +611,16 @@ const Dashboard = () => {
                       </span>
                     </div>
                     <p className="issue-description">{request.issueDescription}</p>
+                    <p className="delivery-method-info">
+                      <strong>Delivery Method:</strong> {request.deliveryMethod === 'pickup' ? 'Pickup (Receiver will come)' : 'Dropoff at Shop'}
+                    </p>
+                    {request.deliveryMethod === 'pickup' && (
+                      <div className="pickup-address-info">
+                        <p><strong>Pickup Address:</strong> {request.address || 'N/A'}</p>
+                        <p><strong>City:</strong> {request.city || 'N/A'}</p>
+                        <p><strong>Postal Code:</strong> {request.postalCode || 'N/A'}</p>
+                      </div>
+                    )}
                     
                     {request.files && request.files.length > 0 && (
                       <div className="repair-images">
@@ -654,12 +674,21 @@ const Dashboard = () => {
                           </>
                         )}
                         {request.status === 'quoted' && request.quote && (
-                          <button 
-                            className="btn-primary view-quote-button"
-                            onClick={() => handleViewQuote(request)}
-                          >
-                            View Quote
-                          </button>
+                          <>
+                            <button 
+                              className="btn-primary view-quote-button"
+                              onClick={() => handleViewQuote(request)}
+                            >
+                              View Quote
+                            </button>
+                            <button 
+                              className="btn-secondary cancel-button"
+                              onClick={() => handleCancelRequest(request._id)}
+                              disabled={cancellingId === request._id}
+                            >
+                              {cancellingId === request._id ? 'Cancelling...' : 'Cancel Request'}
+                            </button>
+                          </>
                         )}
                         {request.status === 'rejected' && request.rejection && (
                           <div className="rejection-info">
