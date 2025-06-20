@@ -33,6 +33,8 @@ const Dashboard = () => {
   const [quoteToAccept, setQuoteToAccept] = useState(null);
   const [deviceTypeFilter, setDeviceTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [searchUser, setSearchUser] = useState('');
+  const [searchDevice, setSearchDevice] = useState('');
 
   useEffect(() => {
     if (user?.role === 'admin') {
@@ -340,7 +342,12 @@ const Dashboard = () => {
   const filteredRequests = repairRequests.filter(request => {
     const deviceTypeMatch = deviceTypeFilter === 'all' || request.deviceType === deviceTypeFilter;
     const statusMatch = statusFilter === 'all' || request.status === statusFilter;
-    return deviceTypeMatch && statusMatch;
+    const deviceNameMatch = request.deviceName?.toLowerCase().includes(searchDevice.toLowerCase());
+    const userNameMatch =
+      !user?.role || user.role !== 'admin' || !searchUser
+        ? true
+        : (request.userId?.name || '').toLowerCase().includes(searchUser.toLowerCase());
+    return deviceTypeMatch && statusMatch && deviceNameMatch && userNameMatch;
   });
 
   const renderAdminDashboard = () => (
@@ -431,6 +438,30 @@ const Dashboard = () => {
         >
           <div className="dashboard-card">
             <h2>All Repair Requests</h2>
+            <div className="search-bar">
+              {user?.role === 'admin' && (
+                <div className="search-group">
+                  <label htmlFor="searchUser">Search by Username:</label>
+                  <input
+                    id="searchUser"
+                    type="text"
+                    value={searchUser}
+                    onChange={e => setSearchUser(e.target.value)}
+                    placeholder="Enter username..."
+                  />
+                </div>
+              )}
+              <div className="search-group">
+                <label htmlFor="searchDevice">Search by Device Name:</label>
+                <input
+                  id="searchDevice"
+                  type="text"
+                  value={searchDevice}
+                  onChange={e => setSearchDevice(e.target.value)}
+                  placeholder="Enter device name..."
+                />
+              </div>
+            </div>
             <div className="filter-bar">
               <div className="filter-group">
                 <label htmlFor="deviceTypeFilter">Device Type:</label>
@@ -636,6 +667,30 @@ const Dashboard = () => {
         >
           <div className="dashboard-card">
             <h2>Requests</h2>
+            <div className="search-bar">
+              {user?.role === 'admin' && (
+                <div className="search-group">
+                  <label htmlFor="searchUser">Search by Username:</label>
+                  <input
+                    id="searchUser"
+                    type="text"
+                    value={searchUser}
+                    onChange={e => setSearchUser(e.target.value)}
+                    placeholder="Enter username..."
+                  />
+                </div>
+              )}
+              <div className="search-group">
+                <label htmlFor="searchDevice">Search by Device Name:</label>
+                <input
+                  id="searchDevice"
+                  type="text"
+                  value={searchDevice}
+                  onChange={e => setSearchDevice(e.target.value)}
+                  placeholder="Enter device name..."
+                />
+              </div>
+            </div>
             <div className="filter-bar">
               <div className="filter-group">
                 <label htmlFor="deviceTypeFilter">Device Type:</label>
