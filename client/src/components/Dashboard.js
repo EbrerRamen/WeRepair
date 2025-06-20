@@ -31,6 +31,8 @@ const Dashboard = () => {
   const [selectedQuote, setSelectedQuote] = useState(null);
   const [showAcceptConfirmation, setShowAcceptConfirmation] = useState(false);
   const [quoteToAccept, setQuoteToAccept] = useState(null);
+  const [deviceTypeFilter, setDeviceTypeFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   useEffect(() => {
     if (user?.role === 'admin') {
@@ -330,6 +332,17 @@ const Dashboard = () => {
     }
   };
 
+  const getDeviceTypes = () => {
+    const types = repairRequests.map(r => r.deviceType).filter(Boolean);
+    return Array.from(new Set(types));
+  };
+
+  const filteredRequests = repairRequests.filter(request => {
+    const deviceTypeMatch = deviceTypeFilter === 'all' || request.deviceType === deviceTypeFilter;
+    const statusMatch = statusFilter === 'all' || request.status === statusFilter;
+    return deviceTypeMatch && statusMatch;
+  });
+
   const renderAdminDashboard = () => (
     <div className="dashboard-content">
       {activeTab === 'overview' && (
@@ -418,6 +431,35 @@ const Dashboard = () => {
         >
           <div className="dashboard-card">
             <h2>All Repair Requests</h2>
+            <div className="filter-bar">
+              <div className="filter-group">
+                <label htmlFor="deviceTypeFilter">Device Type:</label>
+                <select
+                  id="deviceTypeFilter"
+                  value={deviceTypeFilter}
+                  onChange={e => setDeviceTypeFilter(e.target.value)}
+                >
+                  <option value="all">All</option>
+                  {getDeviceTypes().map(type => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="filter-group">
+                <label htmlFor="statusFilter">Status:</label>
+                <select
+                  id="statusFilter"
+                  value={statusFilter}
+                  onChange={e => setStatusFilter(e.target.value)}
+                >
+                  <option value="all">All</option>
+                  <option value="pending">Pending</option>
+                  <option value="quoted">Quoted</option>
+                  <option value="accepted">Accepted</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+              </div>
+            </div>
             {loading ? (
               <div className="loading">Loading repair requests...</div>
             ) : error ? (
@@ -428,7 +470,7 @@ const Dashboard = () => {
               </div>
             ) : (
               <div className="repairs-list">
-                {repairRequests.map((request) => (
+                {filteredRequests.map((request) => (
                   <div key={request._id} className="repair-request-card">
                     <div className="repair-header">
                       <div className="device-info">
@@ -586,6 +628,35 @@ const Dashboard = () => {
         >
           <div className="dashboard-card">
             <h2>Requests</h2>
+            <div className="filter-bar">
+              <div className="filter-group">
+                <label htmlFor="deviceTypeFilter">Device Type:</label>
+                <select
+                  id="deviceTypeFilter"
+                  value={deviceTypeFilter}
+                  onChange={e => setDeviceTypeFilter(e.target.value)}
+                >
+                  <option value="all">All</option>
+                  {getDeviceTypes().map(type => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="filter-group">
+                <label htmlFor="statusFilter">Status:</label>
+                <select
+                  id="statusFilter"
+                  value={statusFilter}
+                  onChange={e => setStatusFilter(e.target.value)}
+                >
+                  <option value="all">All</option>
+                  <option value="pending">Pending</option>
+                  <option value="quoted">Quoted</option>
+                  <option value="accepted">Accepted</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+              </div>
+            </div>
             {loading ? (
               <div className="loading">Loading your repair requests...</div>
             ) : error ? (
@@ -596,7 +667,7 @@ const Dashboard = () => {
               </div>
             ) : (
               <div className="repairs-list">
-                {repairRequests.map((request) => (
+                {filteredRequests.map((request) => (
                   <div key={request._id} className="repair-request-card">
                     <div className="repair-header">
                       <div className="device-info">

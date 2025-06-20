@@ -824,4 +824,40 @@
 .pickup-address-info p {
   margin: 0.2rem 0;
   font-size: 0.98rem;
+}
+
+.filter-bar {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-end;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.filter-group label {
+  font-weight: 600;
+  color: var(--primary-color);
+  margin-bottom: 0.2rem;
+}
+
+.filter-group select {
+  padding: 0.5rem 1.2rem;
+  border-radius: 6px;
+  border: 1.5px solid var(--primary-color);
+  background: #f8f9fa;
+  color: #222;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: border 0.2s;
+}
+
+.filter-group select:focus {
+  outline: none;
+  border-color: var(--accent-color);
 } 
