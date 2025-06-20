@@ -476,6 +476,7 @@ const Dashboard = () => {
                       <div className="device-info">
                         <h3>{request.deviceName}</h3>
                         <span className="device-type">{request.deviceType}</span>
+                        <span className="user-name">{request.userId?.name || 'Unknown User'}</span>
                       </div>
                       <span 
                         className="status-badge"
@@ -673,6 +674,7 @@ const Dashboard = () => {
                       <div className="device-info">
                         <h3>{request.deviceName}</h3>
                         <span className="device-type">{request.deviceType}</span>
+                        <span className="user-name">{request.userId?.name || 'Unknown User'}</span>
                       </div>
                       <span 
                         className="status-badge"
