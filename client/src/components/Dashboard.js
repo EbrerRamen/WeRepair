@@ -558,6 +558,13 @@ const Dashboard = () => {
                           )}
                         </div>
                       )}
+                      {request.status === 'rejected' && request.rejection && (
+                        <div className="rejection-info">
+                          <p className="rejection-reason">
+                            <strong>Rejection Reason:</strong> {request.rejection.reason}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
