@@ -5,6 +5,7 @@ const path = require('path');
 const Quote = require('../models/Quote');
 const { protect } = require('../middleware/auth');
 const fs = require('fs');
+const Notification = require('../models/Notification');
 
 // Configure multer for file upload
 const storage = multer.diskStorage({
@@ -53,7 +54,7 @@ router.post('/submit', protect, upload.array('files', 5), async (req, res) => {
     console.log('Request body:', req.body);
     console.log('Files:', req.files);
 
-    const { deviceName, deviceType, issueDescription } = req.body;
+    const { deviceName, deviceType, issueDescription, deliveryMethod, address, city, postalCode } = req.body;
     
     if (!deviceName || !deviceType || !issueDescription) {
       return res.status(400).json({
@@ -74,6 +75,10 @@ router.post('/submit', protect, upload.array('files', 5), async (req, res) => {
       deviceName,
       deviceType,
       issueDescription,
+      deliveryMethod: deliveryMethod || 'dropoff',
+      address: deliveryMethod === 'pickup' ? address : '',
+      city: deliveryMethod === 'pickup' ? city : '',
+      postalCode: deliveryMethod === 'pickup' ? postalCode : '',
       files: processedFiles
     });
 
@@ -228,7 +233,7 @@ router.delete('/:id', protect, async (req, res) => {
 router.put('/:id', protect, upload.array('files', 5), async (req, res) => {
   try {
     const { id } = req.params;
-    const { deviceName, deviceType, issueDescription } = req.body;
+    const { deviceName, deviceType, issueDescription, deliveryMethod, address, city, postalCode } = req.body;
     const files = req.files;
 
     const quote = await Quote.findById(id);
@@ -240,14 +245,35 @@ router.put('/:id', protect, upload.array('files', 5), async (req, res) => {
     quote.deviceName = deviceName;
     quote.deviceType = deviceType;
     quote.issueDescription = issueDescription;
+    if (deliveryMethod) {
+      quote.deliveryMethod = deliveryMethod;
+      quote.address = deliveryMethod === 'pickup' ? address : '';
+      quote.city = deliveryMethod === 'pickup' ? city : '';
+      quote.postalCode = deliveryMethod === 'pickup' ? postalCode : '';
+    }
 
     // Add new files if any
     if (files && files.length > 0) {
       quote.files.push(...files);
     }
 
+    const oldStatus = quote.status;
     await quote.save();
     res.json({ message: 'Quote updated successfully', quote });
+
+    // Only create notification if status actually changed
+    if (quote.status && quote.status !== oldStatus) {
+      let notifMsg = `Your repair request for ${quote.deviceName} is now '${quote.status}'.`;
+      if (quote.status === 'rejected' && quote.rejection && quote.rejection.reason) {
+        notifMsg += ` Reason: ${quote.rejection.reason}`;
+      }
+      await Notification.create({
+        userId: quote.userId,
+        message: notifMsg,
+        type: 'status',
+        relatedRequestId: quote._id
+      });
+    }
   } catch (error) {
     console.error('Error updating quote:', error);
     res.status(500).json({ message: 'Error updating quote' });
@@ -490,6 +516,34 @@ router.put('/:id/reject', protect, async (req, res) => {
       message: 'Error rejecting quote',
       error: error.message
     });
+  }
+});
+
+// Notification routes
+
+// Get notifications for logged-in user
+router.get('/notifications', protect, async (req, res) => {
+  try {
+    const notifications = await Notification.find({ userId: req.user._id })
+      .sort({ createdAt: -1 });
+    res.json(notifications);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch notifications' });
+  }
+});
+
+// Mark notification as read
+router.patch('/notifications/:id/read', protect, async (req, res) => {
+  try {
+    const notif = await Notification.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user._id },
+      { read: true },
+      { new: true }
+    );
+    if (!notif) return res.status(404).json({ error: 'Notification not found' });
+    res.json(notif);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update notification' });
   }
 });
 
