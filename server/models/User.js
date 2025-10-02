@@ -52,14 +52,6 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
-// Add virtual for notifications (optional)
-userSchema.virtual('notifications', {
-  ref: 'Notification',
-  localField: '_id',
-  foreignField: 'userId',
-  justOne: false
-});
-
 const User = mongoose.model('User', userSchema);
 
 module.exports = User; 

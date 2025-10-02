@@ -5,7 +5,6 @@ const path = require('path');
 const Quote = require('../models/Quote');
 const { protect } = require('../middleware/auth');
 const fs = require('fs');
-const Notification = require('../models/Notification');
 const User = require('../models/User');
 
 // Configure multer for file upload
@@ -85,17 +84,6 @@ router.post('/submit', protect, upload.array('files', 5), async (req, res) => {
 
     await quote.save();
     console.log('Quote saved successfully:', quote);
-
-    // Notify all admins
-    const admins = await User.find({ role: 'admin' });
-    for (const admin of admins) {
-      await Notification.create({
-        userId: admin._id,
-        message: `New repair request submitted by ${req.user.name} for ${deviceName}.`,
-        type: 'status',
-        relatedRequestId: quote._id
-      });
-    }
 
     res.status(201).json({
       success: true,
@@ -231,14 +219,6 @@ router.delete('/:id', protect, async (req, res) => {
       success: true,
       message: 'Quote request cancelled successfully'
     });
-
-    // Create notification
-    await Notification.create({
-      userId: quote.userId,
-      message: `Your repair request for ${quote.deviceName} was cancelled.`,
-      type: 'status',
-      relatedRequestId: quote._id
-    });
   } catch (error) {
     console.error('Error cancelling quote:', error);
     res.status(500).json({
@@ -280,20 +260,6 @@ router.put('/:id', protect, upload.array('files', 5), async (req, res) => {
     const oldStatus = quote.status;
     await quote.save();
     res.json({ message: 'Quote updated successfully', quote });
-
-    // Only create notification if status actually changed
-    if (quote.status && quote.status !== oldStatus) {
-      let notifMsg = `Your repair request for ${quote.deviceName} is now '${quote.status}'.`;
-      if (quote.status === 'rejected' && quote.rejection && quote.rejection.reason) {
-        notifMsg += ` Reason: ${quote.rejection.reason}`;
-      }
-      await Notification.create({
-        userId: quote.userId,
-        message: notifMsg,
-        type: 'status',
-        relatedRequestId: quote._id
-      });
-    }
   } catch (error) {
     console.error('Error updating quote:', error);
     res.status(500).json({ message: 'Error updating quote' });
@@ -426,14 +392,6 @@ router.put('/:id/quote', protect, async (req, res) => {
       message: 'Quote sent successfully',
       quote
     });
-
-    // Create notification
-    await Notification.create({
-      userId: quote.userId,
-      message: `A quote has been sent for your repair request: ${quote.deviceName}.`,
-      type: 'status',
-      relatedRequestId: quote._id
-    });
   } catch (error) {
     console.error('Error sending quote:', error);
     res.status(500).json({
@@ -475,14 +433,6 @@ router.put('/:id/accept', protect, async (req, res) => {
       success: true,
       message: 'Quote accepted successfully',
       quote
-    });
-
-    // Create notification
-    await Notification.create({
-      userId: quote.userId,
-      message: `Your repair request for ${quote.deviceName} was accepted!`,
-      type: 'status',
-      relatedRequestId: quote._id
     });
   } catch (error) {
     console.error('Error accepting quote:', error);
@@ -545,14 +495,6 @@ router.put('/:id/reject', protect, async (req, res) => {
       message: 'Quote rejected successfully',
       quote
     });
-
-    // Create notification
-    await Notification.create({
-      userId: quote.userId,
-      message: `Your repair request for ${quote.deviceName} was rejected. Reason: ${reason.trim()}`,
-      type: 'status',
-      relatedRequestId: quote._id
-    });
   } catch (error) {
     console.error('Error rejecting quote:', error);
     res.status(500).json({
@@ -560,34 +502,6 @@ router.put('/:id/reject', protect, async (req, res) => {
       message: 'Error rejecting quote',
       error: error.message
     });
-  }
-});
-
-// Notification routes
-
-// Get notifications for logged-in user
-router.get('/notifications', protect, async (req, res) => {
-  try {
-    const notifications = await Notification.find({ userId: req.user._id })
-      .sort({ createdAt: -1 });
-    res.json(notifications);
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch notifications' });
-  }
-});
-
-// Mark notification as read
-router.patch('/notifications/:id/read', protect, async (req, res) => {
-  try {
-    const notif = await Notification.findOneAndUpdate(
-      { _id: req.params.id, userId: req.user._id },
-      { read: true },
-      { new: true }
-    );
-    if (!notif) return res.status(404).json({ error: 'Notification not found' });
-    res.json(notif);
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to update notification' });
   }
 });
 
